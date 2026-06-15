@@ -513,49 +513,63 @@
     const actionBtnContainer = document.getElementById('modalActionButtons');
     actionBtnContainer.innerHTML = `<span style="color: var(--primary); font-weight: bold; font-size:14px;">⏳ Syncing updates...</span>`;
 
-    // 2. PARSE MODIFIED DATA FROM FORM ELEMENT
+    // 2. PARSE MODIFIED DATA FROM FORM ELEMENT into a plain object
     const formElement = document.getElementById('editPatientForm');
     const formData = new FormData(formElement);
     
-    // Use URLSearchParams to ensure perfect form parameter mapping for Google Apps Script
-    let params = new URLSearchParams();
-    params.append("action", "update");
-    params.append("RegNumber", activeSelectedRecord.RegNumber); // Vital row lookup key
-
+    // Build a JSON payload — Apps Script reads this via e.postData.contents
+    const payload = { action: "update", RegNumber: activeSelectedRecord.RegNumber };
     formData.forEach((value, key) => {
-        params.append(key, value);
+        payload[key] = value;
     });
 
-    // 3. SECURE URL-ENCODED POST DISPATCH TO LIVE LEDGER
+    // 3. POST AS JSON (no 'no-cors' — we need the response to confirm success)
     fetch(WEB_APP_URL, {
         method: 'POST',
-        mode: 'no-cors',
         cache: 'no-cache',
-        body: params // Sent cleanly as application/x-www-form-urlencoded
+        headers: { 'Content-Type': 'text/plain' }, // text/plain avoids CORS preflight while still sending JSON body
+        body: JSON.stringify(payload)
     })
-    .then(() => {
-        // 4. INSTANT LOCAL MEMORY REFRESH FOR SNAPPY UI EXPERIENCES
+    .then(response => response.json())
+    .then(result => {
+        if (result.status !== 'success') {
+            throw new Error(result.message || 'Unknown error from server');
+        }
+
+        // 4. UPDATE LOCAL MEMORY so the table and Excel export reflect edits immediately
         formData.forEach((value, key) => {
             activeSelectedRecord[key] = value;
         });
 
-        // Toggle back into read-only layout view with fresh updates applied
+        // Also update the matching entry inside parsedRecords so Excel export is correct
+        const idx = parsedRecords.findIndex(r => r._rowId === activeSelectedRecord._rowId);
+        if (idx !== -1) {
+            formData.forEach((value, key) => {
+                parsedRecords[idx][key] = value;
+            });
+        }
+
+        // Toggle back to read-only view
         isEditMode = false;
         displayRecord();
 
-        // 5. RE-TRIGGER BULK SERVER BACKGROUND SYNC FOR MAIN REGISTRY REGISTRATION TABLE
+        // 5. SHOW SUCCESS AND REFRESH TABLE
         const statusBox = document.getElementById('statusDisplay');
         statusBox.style.display = "block";
-        statusBox.innerText = "Edits synced successfully. Re-indexing live database registry rows...";
-        
+        statusBox.innerText = "✅ Record updated successfully in Google Sheets.";
         setTimeout(() => {
-            fetchRecordsFromLedger();
-        }, 1500);
+            statusBox.style.display = "none";
+            fetchRecordsFromLedger(); // Full refresh from server
+        }, 2000);
     })
     .catch(err => {
-        console.error("Database sync fault: ", err);
-        alert("Failed to push updates securely to Google Sheets ledger. Please check network connectivity.");
-        displayRecord(); // Recover command control layout configuration buttons
+        console.error("Update failed: ", err);
+        alert("❌ Failed to save changes to Google Sheets: " + err.message + "\n\nMake sure your Apps Script is redeployed with the new Code.gs.");
+        // Restore save/cancel buttons so doctor can try again
+        actionBtnContainer.innerHTML = `
+            <button type="button" onclick="submitRecordEditsToCloud();" style="background-color: var(--success); color: white;">💾 Save Changes</button>
+            <button type="button" onclick="isEditMode = false; displayRecord();" class="btn-close" style="margin-left: 5px;">❌ Cancel</button>
+        `;
     });
 }
 
