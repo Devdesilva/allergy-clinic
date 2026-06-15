@@ -190,7 +190,7 @@
                 </tr>
             </thead>
             <tbody id="registryBody">
-            </tbody>
+                </tbody>
         </table>
     </div>
 </div>
@@ -199,15 +199,13 @@
     <div class="modal-content">
         <div class="modal-header">
             <h2 id="modalPatientTitle" style="margin:0; color:var(--primary);">Patient Record View</h2>
-            <div id="modalHeaderControls" style="display: flex; gap: 10px; align-items: center;">
-                <button id="modalWordDownload" class="btn-excel">Download Document (.docx)</button>
-                <div id="modalActionButtons"></div>
+            <div>
+                <button id="modalWordDownload" class="btn-excel" style="margin-right: 10px;">Download Document (.docx)</button>
                 <button onclick="closeModal()" class="btn-close">Close Overlay</button>
             </div>
         </div>
-        <form id="editPatientForm" onsubmit="event.preventDefault();">
-            <div class="modal-body" id="modalDataBody"></div>
-        </form>
+        <div class="modal-body" id="modalDataBody">
+            </div>
     </div>
 </div>
 
@@ -227,20 +225,11 @@
     function fetchRecordsFromLedger() {
         fetch(WEB_APP_URL)
         .then(response => response.json())
-        .then(result => {
-            // 1. Check if the backend sent an explicit error
-            if (result.status === "error") {
-                throw new Error(result.message);
-            }
-            
-            // 2. Unpack the actual spreadsheet array from the new JSON format
-            const data = result.data; 
-            
-            if(!data || data.length <= 1) { // <= 1 because row 0 is just headers
+        .then(data => {
+            if(data.length === 0) {
                 document.getElementById('statusDisplay').innerText = "Database ledger is completely empty.";
                 return;
             }
-            
             globalRawData = data; // Keep tracking for raw Excel array generation
             
             // Map table rows to object arrays dynamically matching standard layout
@@ -257,8 +246,8 @@
             renderRegistryRows(parsedRecords);
         })
         .catch(err => {
-            console.error("Fetch Error:", err);
-            document.getElementById('statusDisplay').innerText = "Data format mismatch or network error. Check the console.";
+            console.error(err);
+            document.getElementById('statusDisplay').innerText = "Security block or network disconnection error.";
         });
     }
 
@@ -268,58 +257,20 @@
         
         recordsList.forEach(item => {
             const tr = document.createElement('tr');
+            
+            // Formats standard column visualization arrays cleanly
             const dateVal = item.Date ? item.Date.split('T')[0] : 'N/A';
             
             tr.innerHTML = `
-                <td>📅 ${dateVal}</td>
+                <td>\u{1F4C5} ${dateVal}</td>
                 <td><strong>${item.Name || 'Unlabeled'}</strong></td>
                 <td>${item.RegNumber || '-'}</td>
                 <td><span style="color:var(--secondary); font-weight:600;">${item.ProbableDiagnosis || 'No Diagnosis'}</span></td>
-                <td>
-                    <button class="btn-action" onclick="viewRecordDetails(${item._rowId})">👁️ View</button>
-                    <button class="btn-close" style="background-color:#dc3545; padding: 6px 12px; font-size: 13px; margin-left: 5px;" 
-                            onclick="deleteRecordFromDatabase('${item.RegNumber}', '${item.Name}')">🗑️ Delete</button>
-                </td>
+                <td><button class="btn-action" onclick="viewRecordDetails(${item._rowId})">\u{1F441} View Full Record</button></td>
             `;
             tbody.appendChild(tr);
         });
     }
-
-    function deleteRecordFromDatabase(regNumber, name) {
-    // 1. SHOW THE CONFIRMATION MESSAGE
-    if (!confirm(`⚠️ CRITICAL WARNING:\n\nAre you absolutely sure you want to permanently delete the clinical record for ${name} (Reg No: ${regNumber})?\n\nThis will completely wipe the entry from both this dashboard and the main Excel sheet log. This action cannot be undone.`)) {
-        return;
-    }
-
-    // 2. SHOW LOADING INDICATOR
-    const statusBox = document.getElementById('statusDisplay');
-    statusBox.style.display = "block";
-    statusBox.innerText = `Wiping record for ${name} from live ledger database...`;
-
-    // 3. SEND AS JSON — same method as edit, no no-cors
-    fetch(WEB_APP_URL, {
-        method: 'POST',
-        cache: 'no-cache',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: "delete", RegNumber: String(regNumber) })
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.status !== 'success') {
-            throw new Error(result.message || 'Unknown error');
-        }
-        statusBox.innerText = `✅ Record for ${name} deleted successfully.`;
-        setTimeout(() => {
-            statusBox.style.display = "none";
-            fetchRecordsFromLedger();
-        }, 1500);
-    })
-    .catch(err => {
-        console.error(err);
-        statusBox.style.display = "none";
-        alert("❌ Failed to delete record: " + err.message);
-    });
-}
 
     function filterRegistry() {
         const nameQuery = document.getElementById('searchName').value.toLowerCase();
@@ -340,174 +291,79 @@
     }
 
     function exportToExcel() {
-    if(parsedRecords.length === 0 || globalRawData.length === 0) {
-        alert("No spreadsheet records available to transform into Excel file format.");
-        return;
+        if(globalRawData.length <= 1) {
+            alert("No spreadsheet records available to transform into Excel file format.");
+            return;
+        }
+        const ws = XLSX.utils.aoa_to_sheet(globalRawData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Patient Database");
+        XLSX.writeFile(wb, "Allergy_Clinic_Global_Records.xlsx");
     }
-    
-    // 1. EXTRACT THE ORIGINAL SPREADSHEET HEADERS
-    const headers = globalRawData[0];
-    
-    // 2. RECONSTRUCT THE EXCEL ARRAY-OF-ARRAYS DIRECTLY FROM FRESH LOCAL MEMORY
-    const updatedRawData = [headers];
-    
-    parsedRecords.forEach(item => {
-        // Map each item property back into its exact column sequence matching the Google Sheet
-        const row = headers.map(header => item[header] !== undefined ? item[header] : '');
-        updatedRawData.push(row);
-    });
-
-    // 3. GENERATE AND DOWNLOAD THE FLAWLESS EXCEL SPREADSHEET
-    const ws = XLSX.utils.aoa_to_sheet(updatedRawData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Patient Database");
-    XLSX.writeFile(wb, "Allergy_Clinic_Global_Records.xlsx");
-    }
-
-    let isEditMode = false; // Tracks whether the modal is in Read-Only or Edit mode
 
     function viewRecordDetails(rowId) {
         activeSelectedRecord = parsedRecords.find(r => r._rowId === rowId);
         if(!activeSelectedRecord) return;
+
+        document.getElementById('modalPatientTitle').innerText = `Record: ${activeSelectedRecord.Name || 'Unknown Details'}`;
         
-        isEditMode = false; // Always default to read-only layout when clicked
-        displayRecord();
-    }
-
-    function displayRecord() {
-        if(!activeSelectedRecord) return;
-
-        // 1. DYNAMIC MODAL TITLE ADJUSTMENT
-        document.getElementById('modalPatientTitle').innerText = isEditMode 
-            ? `Editing Record: ${activeSelectedRecord.Name || 'Patient'}` 
-            : `Record: ${activeSelectedRecord.Name || 'Unknown Details'}`;
-        
-        // 2. RENDER TOP COMMAND BUTTONS BASED ON STATE
-        const actionBtnContainer = document.getElementById('modalActionButtons');
-        if (!isEditMode) {
-            actionBtnContainer.innerHTML = `
-                <button type="button" onclick="isEditMode = true; displayRecord();" style="background-color: var(--primary); color: white;">✏️ Edit Record</button>
-            `;
-        } else {
-            actionBtnContainer.innerHTML = `
-                <button type="button" onclick="submitRecordEditsToCloud();" style="background-color: var(--success); color: white;">💾 Save Changes</button>
-                <button type="button" onclick="isEditMode = false; displayRecord();" class="btn-close" style="margin-left: 5px;">❌ Cancel</button>
-            `;
-        }
-
-        // 3. INLINE HELPERS TO AUTOMATICALLY SWITCH TEXT SPANS INTO FORM INPUT FIELDS
-        // Note: RegNumber remains read-only because it serves as the row key for Excel mapping modifications
-        function field(key, type = "text", isKey = false) {
-            let val = activeSelectedRecord[key] || '';
-            if (type === "date" && val.includes('T')) val = val.split('T')[0];
-            
-            if (!isEditMode || isKey) {
-                return `<span style="color:#212529; font-weight:500;">${val || '-'}</span>`;
-            } else {
-                return `<input type="${type}" name="${key}" value="${val}" style="padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 14px; width: 90%; max-width:250px; background:#fff; color:#333;">`;
-            }
-        }
-
-        function textareaField(key) {
-            let val = activeSelectedRecord[key] || '';
-            if (!isEditMode) {
-                return `<span style="color:#212529; font-weight:500; display:block; white-space:pre-wrap;">${val || '-'}</span>`;
-            } else {
-                return `<textarea name="${key}" style="padding: 6px; border: 1px solid var(--border); border-radius: 4px; font-size: 14px; width: 98%; height: 65px; font-family: inherit; background:#fff; color:#333;">${val}</textarea>`;
-            }
-        }
-
-        // 4. GENERATE UNIFIED FORM STRUCTURE
         let htmlContent = `
             <h3>Section 1: Patient Demographics</h3>
             <div class="modal-grid">
-                <div><strong>Patient Name:</strong> ${field('Name')}</div>
-                <div><strong>Registration Number:</strong> ${field('RegNumber', 'text', true)} <small style="color:#6c757d;">(Fixed Primary Key)</small></div>
-                <div><strong>Age (Years):</strong> ${field('Age', 'number')}</div>
-                <div><strong>Gender:</strong> ${field('Gender')}</div>
-                <div><strong>Date of Record:</strong> ${field('Date', 'date')}</div>
-                <div><strong>Contact Number:</strong> ${field('ContactNumber')}</div>
-                <div><strong>Hometown:</strong> ${field('Hometown')}</div>
-                <div><strong>Occupation:</strong> ${field('Occupation')}</div>
-                <div><strong>Referred By:</strong> ${field('ReferredBy')}</div>
+                <div><strong>Registration Number:</strong> ${activeSelectedRecord.RegNumber}</div>
+                <div><strong>Age / Gender:</strong> ${activeSelectedRecord.Age}Y / ${activeSelectedRecord.Gender}</div>
+                <div><strong>Date of Record:</strong> ${activeSelectedRecord.Date ? activeSelectedRecord.Date.split('T')[0] : ''}</div>
+                <div><strong>Contact Number:</strong> ${activeSelectedRecord.ContactNumber}</div>
+                <div><strong>Hometown:</strong> ${activeSelectedRecord.Hometown}</div>
+                <div><strong>Occupation:</strong> ${activeSelectedRecord.Occupation}</div>
+                <div><strong>Referred By:</strong> ${activeSelectedRecord.ReferredBy}</div>
             </div>
 
             <h3>Section 2: Clinical Presentation</h3>
             <div class="modal-grid">
-                <div><strong>Age of Onset (Years):</strong> ${field('AgeOfOnset')}</div>
-                <div><strong>Anaphylaxis Episodes:</strong> ${field('Anaphylaxis')}</div>
-                <div><strong>Carries Epipen/Adrenaline:</strong> ${field('CarriesEpipen')}</div>
+                <div><strong>Age of Onset (Years):</strong> ${activeSelectedRecord.AgeOfOnset}</div>
+                <div><strong>Anaphylaxis Episodes:</strong> ${activeSelectedRecord.Anaphylaxis}</div>
+                <div><strong>Carries Epipen/Adrenaline:</strong> ${activeSelectedRecord.CarriesEpipen}</div>
             </div>
-            <p style="margin-top:10px;"><strong>Presenting Complaint:</strong><br>${textareaField('PresentingComplaint')}</p>
+            <p style="margin-top:10px;"><strong>Presenting Complaint:</strong><br>${activeSelectedRecord.PresentingComplaint || '-'}</p>
 
             <h3>Section 3: Allergy & Medical History</h3>
-            <p><strong>General Allergic History:</strong><br>${textareaField('GeneralAllergicHistory')}</p>
+            <p><strong>General Allergic History:</strong> ${activeSelectedRecord.GeneralAllergicHistory || '-'}</p>
             <div class="modal-grid">
-                <div><strong>Drug Allergies:</strong> ${field('DrugAllergies')}</div>
-                <div><strong>Food Allergies:</strong> ${field('FoodAllergies')}</div>
-                <div><strong>Tick Bites:</strong> ${field('TickBites')}</div>
+                <div><strong>Drug Allergies:</strong> ${activeSelectedRecord.DrugAllergies}</div>
+                <div><strong>Food Allergies:</strong> ${activeSelectedRecord.FoodAllergies}</div>
+                <div><strong>Tick Bites:</strong> ${activeSelectedRecord.TickBites}</div>
             </div>
-            <p><strong>Past Medical History:</strong><br>${textareaField('PastMedicalHistory')}</p>
-            <p><strong>Drug History:</strong><br>${textareaField('DrugHistory')}</p>
-            <p><strong>Past Surgical History:</strong><br>${textareaField('PastSurgicalHistory')}</p>
-            <p><strong>Family History:</strong><br>${textareaField('FamilyHistory')}</p>
+            <p><strong>Past Medical History:</strong> ${activeSelectedRecord.PastMedicalHistory || '-'}</p>
+            <p><strong>Drug History:</strong> ${activeSelectedRecord.DrugHistory || '-'}</p>
+            <p><strong>Past Surgical History:</strong> ${activeSelectedRecord.PastSurgicalHistory || '-'}</p>
+            <p><strong>Family History:</strong> ${activeSelectedRecord.FamilyHistory || '-'}</p>
 
             <h3>Section 4: Assessment & Management</h3>
-            <p><strong>Problem List:</strong><br>${textareaField('ProblemList')}</p>
+            <p><strong>Problem List:</strong> ${activeSelectedRecord.ProblemList || '-'}</p>
             <div class="modal-grid">
-                <div><strong>Probable Diagnosis:</strong> ${field('ProbableDiagnosis')}</div>
-                <div><strong>Review Plan:</strong> ${field('ReviewPlan')}</div>
+                <div><strong>Probable Diagnosis:</strong> ${activeSelectedRecord.ProbableDiagnosis}</div>
+                <div><strong>Review Plan:</strong> ${activeSelectedRecord.ReviewPlan}</div>
             </div>
-            <p><strong>Investigations Ordered:</strong><br>${textareaField('InvestigationsOrdered')}</p>
-            <p><strong>Management Plan:</strong><br>${textareaField('ManagementPlan')}</p>
-            <p><strong>Prescription Ledger:</strong><br>${textareaField('Prescription')}</p>
+            <p><strong>Investigations Ordered:</strong> ${activeSelectedRecord.InvestigationsOrdered || '-'}</p>
+            <p><strong>Management Plan:</strong> ${activeSelectedRecord.ManagementPlan || '-'}</p>
+            <p><strong>Prescription Ledger:</strong> ${activeSelectedRecord.Prescription || '-'}</p>
 
             <h3>Section 5: Skin Prick Test Results</h3>
-            <p>
-                <strong>0.1% Histamine (Positive Control):</strong> ${field('Histamine')} | 
-                <strong>N. Saline (Negative Control):</strong> ${field('Saline')}
-            </p>
+            <p><strong>0.1% Histamine (Positive Control):</strong> ${activeSelectedRecord.Histamine || '-'} | <strong>N. Saline (Negative Control):</strong> ${activeSelectedRecord.Saline || '-'}</p>
             
-            <div style="display:grid; grid-template-columns: repeat(3,1fr); gap:15px; font-size:13px; margin-top:10px; background:#f8f9fa; padding:15px; border-radius:4px; border:1px solid var(--border);">
+            <div style="display:grid; grid-template-columns: repeat(3,1fr); gap:15px; font-size:13px; margin-top:10px; background:#f8f9fa; padding:15px; border-radius:4px;">
                 <div>
-                    <strong style="color:var(--primary); display:block; margin-bottom:5px;">Foods / Extracts</strong>
-                    Beef (Ext): ${field('BeefExtract')}<br>
-                    Pork (Ext): ${field('PorkExtract')}<br>
-                    Beef (Raw): ${field('BeefRaw')}<br>
-                    Pork (Raw): ${field('PorkRaw')}<br>
-                    Milk: ${field('Milk')}<br>
-                    Gelatin: ${field('Gelatin')}<br>
-                    Prawns: ${field('Prawns')}<br>
-                    Tuna: ${field('Tuna')}<br>
-                    Salmon: ${field('Salmon')}<br>
-                    Eggs: ${field('Eggs')}<br>
-                    Chicken: ${field('Chicken')}
+                    <strong>Foods / Extracts</strong><br>
+                    Beef (Ext): ${activeSelectedRecord.BeefExtract || '-'}<br>Pork (Ext): ${activeSelectedRecord.PorkExtract || '-'}<br>Beef (Raw): ${activeSelectedRecord.BeefRaw || '-'}<br>Pork (Raw): ${activeSelectedRecord.PorkRaw || '-'}<br>Milk: ${activeSelectedRecord.Milk || '-'}<br>Gelatin: ${activeSelectedRecord.Gelatin || '-'}<br>Prawns: ${activeSelectedRecord.Prawns || '-'}<br>Tuna: ${activeSelectedRecord.Tuna || '-'}<br>Salmon: ${activeSelectedRecord.Salmon || '-'}<br>Eggs: ${activeSelectedRecord.Eggs || '-'}<br>Chicken: ${activeSelectedRecord.Chicken || '-'}
                 </div>
                 <div>
-                    <strong style="color:var(--primary); display:block; margin-bottom:5px;">Inhalants / Environment</strong>
-                    House Dust Mite: ${field('HouseDustMite')}<br>
-                    Storage Mite: ${field('StorageMite')}<br>
-                    Cockroach: ${field('Cockroach')}<br>
-                    Cat Epithelium: ${field('CatEpithelium')}<br>
-                    Dog Epithelium: ${field('DogEpithelium')}<br>
-                    Mould Mix: ${field('MouldMix')}<br>
-                    Grass Pollens: ${field('GrassPollens')}<br>
-                    Weed Pollens: ${field('WeedPollens')}<br>
-                    Aspergillus: ${field('Aspergillus')}<br>
-                    Wheat: ${field('Wheat')}
+                    <strong>Inhalants / Environment</strong><br>
+                    House Dust Mite: ${activeSelectedRecord.HouseDustMite || '-'}<br>Storage Mite: ${activeSelectedRecord.StorageMite || '-'}<br>Cockroach: ${activeSelectedRecord.Cockroach || '-'}<br>Cat Epithelium: ${activeSelectedRecord.CatEpithelium || '-'}<br>Dog Epithelium: ${activeSelectedRecord.DogEpithelium || '-'}<br>Mould Mix: ${activeSelectedRecord.MouldMix || '-'}<br>Grass Pollens: ${activeSelectedRecord.GrassPollens || '-'}<br>Weed Pollens: ${activeSelectedRecord.WeedPollens || '-'}<br>Aspergillus: ${activeSelectedRecord.Aspergillus || '-'}<br>Wheat: ${activeSelectedRecord.Wheat || '-'}
                 </div>
                 <div>
-                    <strong style="color:var(--primary); display:block; margin-bottom:5px;">Medications</strong>
-                    IV Penicillin: ${field('IVPenicillin')}<br>
-                    Oral Penicillin: ${field('OralPenicillin')}<br>
-                    Amoxicillin: ${field('Amoxicillin')}<br>
-                    Co-amoxiclav: ${field('CoAmoxiclav')}<br>
-                    Cefalexin: ${field('Cefalexin')}<br>
-                    Cefuroxime: ${field('Cefuroxime')}<br>
-                    Cefotaxime/Ceftriaxone: ${field('CefotaximeCeftriaxone')}<br>
-                    Meropenem: ${field('Meropenem')}<br>
-                    Omeprazole: ${field('Omeprazole')}<br>
-                    Infliximab/Adalimumab: ${field('InfliximabAdalimumab')}
+                    <strong>Medications</strong><br>
+                    IV Penicillin: ${activeSelectedRecord.IVPenicillin || '-'}<br>Oral Penicillin: ${activeSelectedRecord.OralPenicillin || '-'}<br>Amoxicillin: ${activeSelectedRecord.Amoxicillin || '-'}<br>Co-amoxiclav: ${activeSelectedRecord.CoAmoxiclav || '-'}<br>Cefalexin: ${activeSelectedRecord.Cefalexin || '-'}<br>Cefuroxime: ${activeSelectedRecord.Cefuroxime || '-'}<br>Cefotaxime/Ceftriaxone: ${activeSelectedRecord.CefotaximeCeftriaxone || '-'}<br>Meropenem: ${activeSelectedRecord.Meropenem || '-'}<br>Omeprazole: ${activeSelectedRecord.Omeprazole || '-'}<br>Infliximab/Adalimumab: ${activeSelectedRecord.InfliximabAdalimumab || '-'}
                 </div>
             </div>
         `;
@@ -515,73 +371,6 @@
         document.getElementById('modalDataBody').innerHTML = htmlContent;
         document.getElementById('recordModal').style.display = "block";
     }
-
-    function submitRecordEditsToCloud() {
-    if (!activeSelectedRecord) return;
-
-    // 1. VISUAL STATUS LOCKOUT INSIDE THE OVERLAY
-    const actionBtnContainer = document.getElementById('modalActionButtons');
-    actionBtnContainer.innerHTML = `<span style="color: var(--primary); font-weight: bold; font-size:14px;">⏳ Syncing updates...</span>`;
-
-    // 2. PARSE MODIFIED DATA FROM FORM ELEMENT into a plain object
-    const formElement = document.getElementById('editPatientForm');
-    const formData = new FormData(formElement);
-    
-    // Build a JSON payload — Apps Script reads this via e.postData.contents
-    const payload = { action: "update", RegNumber: activeSelectedRecord.RegNumber };
-    formData.forEach((value, key) => {
-        payload[key] = value;
-    });
-
-    // 3. POST AS JSON (no 'no-cors' — we need the response to confirm success)
-    fetch(WEB_APP_URL, {
-        method: 'POST',
-        cache: 'no-cache',
-        headers: { 'Content-Type': 'text/plain' }, // text/plain avoids CORS preflight while still sending JSON body
-        body: JSON.stringify(payload)
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.status !== 'success') {
-            throw new Error(result.message || 'Unknown error from server');
-        }
-
-        // 4. UPDATE LOCAL MEMORY so the table and Excel export reflect edits immediately
-        formData.forEach((value, key) => {
-            activeSelectedRecord[key] = value;
-        });
-
-        // Also update the matching entry inside parsedRecords so Excel export is correct
-        const idx = parsedRecords.findIndex(r => r._rowId === activeSelectedRecord._rowId);
-        if (idx !== -1) {
-            formData.forEach((value, key) => {
-                parsedRecords[idx][key] = value;
-            });
-        }
-
-        // Toggle back to read-only view
-        isEditMode = false;
-        displayRecord();
-
-        // 5. SHOW SUCCESS AND REFRESH TABLE
-        const statusBox = document.getElementById('statusDisplay');
-        statusBox.style.display = "block";
-        statusBox.innerText = "✅ Record updated successfully in Google Sheets.";
-        setTimeout(() => {
-            statusBox.style.display = "none";
-            fetchRecordsFromLedger(); // Full refresh from server
-        }, 2000);
-    })
-    .catch(err => {
-        console.error("Update failed: ", err);
-        alert("❌ Failed to save changes to Google Sheets: " + err.message + "\n\nMake sure your Apps Script is redeployed with the new Code.gs.");
-        // Restore save/cancel buttons so doctor can try again
-        actionBtnContainer.innerHTML = `
-            <button type="button" onclick="submitRecordEditsToCloud();" style="background-color: var(--success); color: white;">💾 Save Changes</button>
-            <button type="button" onclick="isEditMode = false; displayRecord();" class="btn-close" style="margin-left: 5px;">❌ Cancel</button>
-        `;
-    });
-}
 
     function closeModal() {
         document.getElementById('recordModal').style.display = "none";
@@ -686,9 +475,8 @@
             }]
         });
 
-        // Pack structural elements into an unformatted binary chunk and trigger FileSaver dispatch loop
         docx.Packer.toBlob(doc).then(blob => {
-            saveAs(blob, `Allergy_Clinic_Record_${activeSelectedRecord.RegNumber || 'Patient'}.docx`);
+            saveAs(blob, `Historical_Allergy_Record_${activeSelectedRecord.RegNumber || 'Archive'}.docx`);
         });
     });
 </script>
