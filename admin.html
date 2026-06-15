@@ -227,11 +227,20 @@
     function fetchRecordsFromLedger() {
         fetch(WEB_APP_URL)
         .then(response => response.json())
-        .then(data => {
-            if(data.length === 0) {
+        .then(result => {
+            // 1. Check if the backend sent an explicit error
+            if (result.status === "error") {
+                throw new Error(result.message);
+            }
+            
+            // 2. Unpack the actual spreadsheet array from the new JSON format
+            const data = result.data; 
+            
+            if(!data || data.length <= 1) { // <= 1 because row 0 is just headers
                 document.getElementById('statusDisplay').innerText = "Database ledger is completely empty.";
                 return;
             }
+            
             globalRawData = data; // Keep tracking for raw Excel array generation
             
             // Map table rows to object arrays dynamically matching standard layout
@@ -248,8 +257,8 @@
             renderRegistryRows(parsedRecords);
         })
         .catch(err => {
-            console.error(err);
-            document.getElementById('statusDisplay').innerText = "Security block or network disconnection error.";
+            console.error("Fetch Error:", err);
+            document.getElementById('statusDisplay').innerText = "Data format mismatch or network error. Check the console.";
         });
     }
 
