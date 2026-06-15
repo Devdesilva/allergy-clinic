@@ -279,35 +279,36 @@
     function deleteRecordFromDatabase(regNumber, name) {
     // 1. SHOW THE CONFIRMATION MESSAGE
     if (!confirm(`⚠️ CRITICAL WARNING:\n\nAre you absolutely sure you want to permanently delete the clinical record for ${name} (Reg No: ${regNumber})?\n\nThis will completely wipe the entry from both this dashboard and the main Excel sheet log. This action cannot be undone.`)) {
-        return; // If they click cancel, do nothing
+        return;
     }
-    
+
     // 2. SHOW LOADING INDICATOR
     const statusBox = document.getElementById('statusDisplay');
     statusBox.style.display = "block";
     statusBox.innerText = `Wiping record for ${name} from live ledger database...`;
 
-    // Convert to URLSearchParams for clean delivery
-    let params = new URLSearchParams();
-    params.append("action", "delete");
-    params.append("regNumber", regNumber);
-
-    // 3. SEND POST COMMAND TO GOOGLE SCRIPT
+    // 3. SEND AS JSON — same method as edit, no no-cors
     fetch(WEB_APP_URL, {
         method: 'POST',
-        mode: 'no-cors',
         cache: 'no-cache',
-        body: params
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: "delete", RegNumber: String(regNumber) })
     })
-    .then(() => {
-        // Force background refresh to update registry table view after 1.5 seconds
+    .then(response => response.json())
+    .then(result => {
+        if (result.status !== 'success') {
+            throw new Error(result.message || 'Unknown error');
+        }
+        statusBox.innerText = `✅ Record for ${name} deleted successfully.`;
         setTimeout(() => {
+            statusBox.style.display = "none";
             fetchRecordsFromLedger();
-        }, 1500); 
+        }, 1500);
     })
     .catch(err => {
         console.error(err);
-        alert("Failed to securely delete record. Check network connection.");
+        statusBox.style.display = "none";
+        alert("❌ Failed to delete record: " + err.message);
     });
 }
 
