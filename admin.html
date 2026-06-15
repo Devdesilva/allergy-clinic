@@ -330,14 +330,28 @@
     }
 
     function exportToExcel() {
-        if(globalRawData.length <= 1) {
-            alert("No spreadsheet records available to transform into Excel file format.");
-            return;
-        }
-        const ws = XLSX.utils.aoa_to_sheet(globalRawData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Patient Database");
-        XLSX.writeFile(wb, "Allergy_Clinic_Global_Records.xlsx");
+    if(parsedRecords.length === 0 || globalRawData.length === 0) {
+        alert("No spreadsheet records available to transform into Excel file format.");
+        return;
+    }
+    
+    // 1. EXTRACT THE ORIGINAL SPREADSHEET HEADERS
+    const headers = globalRawData[0];
+    
+    // 2. RECONSTRUCT THE EXCEL ARRAY-OF-ARRAYS DIRECTLY FROM FRESH LOCAL MEMORY
+    const updatedRawData = [headers];
+    
+    parsedRecords.forEach(item => {
+        // Map each item property back into its exact column sequence matching the Google Sheet
+        const row = headers.map(header => item[header] !== undefined ? item[header] : '');
+        updatedRawData.push(row);
+    });
+
+    // 3. GENERATE AND DOWNLOAD THE FLAWLESS EXCEL SPREADSHEET
+    const ws = XLSX.utils.aoa_to_sheet(updatedRawData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Patient Database");
+    XLSX.writeFile(wb, "Allergy_Clinic_Global_Records.xlsx");
     }
 
     let isEditMode = false; // Tracks whether the modal is in Read-Only or Edit mode
