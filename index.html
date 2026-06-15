@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Allergy Clinic - Patient History Portal</title>
+    <script src="https://unpkg.com/docx@7.3.0/build/index.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        :root {
+            --primary: #0056b3;
+            --secondary: #17a2b8;
+            --dark: #212529;
+            --light: #f8f9fa;
+            --border: #dee2e6;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: #e9ecef;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .header-main {
+            text-align: center;
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .header-main h1 {
+            color: var(--primary);
+            margin: 0;
+            font-size: 28px;
+            text-transform: uppercase;
+        }
+        .nav-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: var(--secondary);
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .nav-link:hover {
+            text-decoration: underline;
+        }
+        section {
+            background: var(--light);
+            padding: 25px;
+            border-left: 5px solid var(--secondary);
+            border-radius: 4px;
+            margin-bottom: 30px;
+        }
+        section h2 {
+            color: var(--primary);
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 20px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 5px;
+        }
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        input[type="text"], input[type="number"], input[type="date"], select, textarea {
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 15px;
+            background: #fff;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        .radio-label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: normal;
+            cursor: pointer;
+        }
+        /* Allergy Grid Styling */
+        .allergen-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+        }
+        @media (max-width: 900px) {
+            .allergen-grid { grid-template-columns: 1fr; }
+        }
+        .allergen-col h3 {
+            font-size: 16px;
+            color: var(--primary);
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 5px;
+        }
+        .allergen-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px dashed var(--border);
+        }
+        .allergen-row label {
+            margin-bottom: 0;
+            font-weight: 500;
+        }
+        .allergen-row input {
+            width: 80px;
+            padding: 4px 8px;
+            text-align: center;
+        }
+        .btn-container {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        button {
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .btn-submit { background-color: var(--primary); color: white; }
+        .btn-word { background-color: #2b579a; color: white; display: none; }
+        button:hover { opacity: 0.9; }
+        #statusMessage {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="admin.html" class="nav-link">➔ Go to Admin Dashboard</a>
+    
+    <div class="header-main">
+        <h1>Allergy Clinic – Patient History Record</h1>
+    </div>
+
+    <form id="allergyForm">
+        <section>
+            <h2>Section 1: Patient Demographics</h2>
+            <div class="grid-3">
+                <div class="form-group"><label>Name</label><input type="text" id="name" required></div>
+                <div class="form-group"><label>Registration Number</label><input type="text" id="regNumber" required></div>
+                <div class="form-group"><label>Age (Years)</label><input type="number" id="age" required></div>
+                <div class="form-group">
+                    <label>Gender</label>
+                    <select id="gender" required>
+                        <option value="">Select</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Date</label><input type="date" id="date" required></div>
+                <div class="form-group"><label>Contact Number</label><input type="text" id="contact" required></div>
+                <div class="form-group"><label>Hometown</label><input type="text" id="hometown" required></div>
+                <div class="form-group"><label>Occupation</label><input type="text" id="occupation" required></div>
+                <div class="form-group"><label>Referred By</label><input type="text" id="referredBy"></div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Section 2: Clinical Presentation</h2>
+            <div class="grid-3">
+                <div class="form-group"><label>Age of Onset (Years)</label><input type="number" id="ageOnset"></div>
+                <div class="form-group">
+                    <label>Anaphylaxis Episodes</label>
+                    <select id="anaphylaxis">
+                        <option value="None">None</option>
+                        <option value="One">One</option>
+                        <option value="Multiple">Multiple</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Carries Epipen/Adrenaline</label>
+                    <div class="radio-group">
+                        <label class="radio-label"><input type="radio" name="epipen" value="Yes"> Yes</label>
+                        <label class="radio-label"><input type="radio" name="epipen" value="No" checked> No</label>
+                    </div>
+                </div>
+                <div class="form-group full-width"><label>Presenting Complaint</label><textarea id="complaint"></textarea></div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Section 3: Allergy & Medical History</h2>
+            <div class="grid-3">
+                <div class="form-group full-width"><label>General Allergic History</label><textarea id="allergicHistory"></textarea></div>
+                <div class="form-group"><label>Drug Allergies</label><input type="text" id="drugAllergies"></div>
+                <div class="form-group"><label>Food Allergies</label><input type="text" id="foodAllergies"></div>
+                <div class="form-group">
+                    <label>Tick Bites</label>
+                    <div class="radio-group">
+                        <label class="radio-label"><input type="radio" name="tickBites" value="Yes"> Yes</label>
+                        <label class="radio-label"><input type="radio" name="tickBites" value="No" checked> No</label>
+                    </div>
+                </div>
+                <div class="form-group full-width"><label>Past Medical History</label><textarea id="medicalHistory"></textarea></div>
+                <div class="form-group full-width"><label>Drug History</label><textarea id="drugHistory"></textarea></div>
+                <div class="form-group full-width"><label>Past Surgical History</label><textarea id="surgicalHistory"></textarea></div>
+                <div class="form-group full-width"><label>Family History</label><textarea id="familyHistory"></textarea></div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Section 4: Assessment & Management</h2>
+            <div class="grid-3">
+                <div class="form-group full-width"><label>Problem List</label><textarea id="problems"></textarea></div>
+                <div class="form-group"><label>Probable Diagnosis</label><input type="text" id="diagnosis"></div>
+                <div class="form-group"><label>Review Plan</label><input type="text" id="review"></div>
+                <div class="form-group full-width"><label>Investigations Ordered</label><textarea id="investigations"></textarea></div>
+                <div class="form-group full-width"><label>Management Plan</label><textarea id="management"></textarea></div>
+                <div class="form-group full-width"><label>Prescription</label><textarea id="prescription"></textarea></div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Section 5: Skin Prick Test Results</h2>
+            <div class="grid-3" style="margin-bottom: 20px;">
+                <div class="form-group"><label>0.1% Histamine (Positive Control)</label><input type="text" id="histamine"></div>
+                <div class="form-group"><label>N. Saline (Negative Control)</label><input type="text" id="saline"></div>
+            </div>
+            
+            <div class="allergen-grid">
+                <div class="allergen-col">
+                    <h3>Foods / Extracts</h3>
+                    <div class="allergen-row"><label>Beef (Extract)</label><input type="text" id="beefExt"></div>
+                    <div class="allergen-row"><label>Pork (Extract)</label><input type="text" id="porkExt"></div>
+                    <div class="allergen-row"><label>Beef (Raw)</label><input type="text" id="beefRaw"></div>
+                    <div class="allergen-row"><label>Pork (Raw)</label><input type="text" id="porkRaw"></div>
+                    <div class="allergen-row"><label>Milk</label><input type="text" id="milk"></div>
+                    <div class="allergen-row"><label>Gelatin</label><input type="text" id="gelatin"></div>
+                    <div class="allergen-row"><label>Prawns</label><input type="text" id="prawns"></div>
+                    <div class="allergen-row"><label>Tuna</label><input type="text" id="tuna"></div>
+                    <div class="allergen-row"><label>Salmon</label><input type="text" id="salmon"></div>
+                    <div class="allergen-row"><label>Eggs</label><input type="text" id="eggs"></div>
+                    <div class="allergen-row"><label>Chicken</label><input type="text" id="chicken"></div>
+                </div>
+                <div class="allergen-col">
+                    <h3>Inhalants / Environment</h3>
+                    <div class="allergen-row"><label>House Dust Mite</label><input type="text" id="dustMite"></div>
+                    <div class="allergen-row"><label>Storage Mite</label><input type="text" id="storageMite"></div>
+                    <div class="allergen-row"><label>Cockroach</label><input type="text" id="cockroach"></div>
+                    <div class="allergen-row"><label>Cat epithelium</label><input type="text" id="cat"></div>
+                    <div class="allergen-row"><label>Dog epithelium</label><input type="text" id="dog"></div>
+                    <div class="allergen-row"><label>Mould Mix</label><input type="text" id="mould"></div>
+                    <div class="allergen-row"><label>Grass Pollens</label><input type="text" id="grass"></div>
+                    <div class="allergen-row"><label>Weed Pollens</label><input type="text" id="weed"></div>
+                    <div class="allergen-row"><label>Aspergillus</label><input type="text" id="aspergillus"></div>
+                    <div class="allergen-row"><label>Wheat</label><input type="text" id="wheat"></div>
+                </div>
+                <div class="allergen-col">
+                    <h3>Medications</h3>
+                    <div class="allergen-row"><label>IV Penicillin</label><input type="text" id="ivPen"></div>
+                    <div class="allergen-row"><label>Oral Penicillin</label><input type="text" id="oralPen"></div>
+                    <div class="allergen-row"><label>Amoxicillin</label><input type="text" id="amox"></div>
+                    <div class="allergen-row"><label>Co-amoxiclav</label><input type="text" id="coAmox"></div>
+                    <div class="allergen-row"><label>Cefalexin</label><input type="text" id="cefalexin"></div>
+                    <div class="allergen-row"><label>Cefuroxime</label><input type="text" id="cefuroxime"></div>
+                    <div class="allergen-row"><label>Cefotaxime/Ceftriaxone</label><input type="text" id="cefotaxime"></div>
+                    <div class="allergen-row"><label>Meropenem</label><input type="text" id="mero"></div>
+                    <div class="allergen-row"><label>Omeprazole</label><input type="text" id="omep"></div>
+                    <div class="allergen-row"><label>Infliximab/Adalimumab</label><input type="text" id="infliximab"></div>
+                </div>
+            </div>
+        </section>
+
+        <div id="statusMessage"></div>
+
+        <div class="btn-container">
+            <button type="submit" class="btn-submit" id="submitBtn">Submit & Save Record</button>
+            <button type="button" class="btn-word" id="downloadWordBtn">Download Form (.docx)</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // --- APP CONFIGURATION ---
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxP53oHFtnFshF8UAF7I3JbdnKdlap0MxN1NzmPDfq_Ea8rAH8hlDPtkL4KRByPA5pKww/exec"; 
+
+    // Set default date picker value to today
+    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+
+    let currentSubmittedData = null;
+
+    // Handle Form submission
+    document.getElementById('allergyForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const submitBtn = document.getElementById('submitBtn');
+        const statusMsg = document.getElementById('statusMessage');
+        
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Saving Data...";
+        statusMsg.style.display = "block";
+        statusMsg.style.backgroundColor = "#fff3cd";
+        statusMsg.style.color = "#856404";
+        statusMsg.innerText = "Transmitting record securely to clinical ledger...";
+
+        // Collect all form values
+        const formData = {
+            name: document.getElementById('name').value,
+            regNumber: document.getElementById('regNumber').value,
+            age: document.getElementById('age').value,
+            gender: document.getElementById('gender').value,
+            date: document.getElementById('date').value,
+            contact: document.getElementById('contact').value,
+            hometown: document.getElementById('hometown').value,
+            occupation: document.getElementById('occupation').value,
+            referredBy: document.getElementById('referredBy').value,
+            ageOnset: document.getElementById('ageOnset').value,
+            anaphylaxis: document.getElementById('anaphylaxis').value,
+            epipen: document.querySelector('input[name="epipen"]:checked').value,
+            complaint: document.getElementById('complaint').value,
+            allergicHistory: document.getElementById('allergicHistory').value,
+            drugAllergies: document.getElementById('drugAllergies').value,
+            foodAllergies: document.getElementById('foodAllergies').value,
+            tickBites: document.querySelector('input[name="tickBites"]:checked').value,
+            medicalHistory: document.getElementById('medicalHistory').value,
+            drugHistory: document.getElementById('drugHistory').value,
+            surgicalHistory: document.getElementById('surgicalHistory').value,
+            familyHistory: document.getElementById('familyHistory').value,
+            problems: document.getElementById('problems').value,
+            diagnosis: document.getElementById('diagnosis').value,
+            review: document.getElementById('review').value,
+            investigations: document.getElementById('investigations').value,
+            management: document.getElementById('management').value,
+            prescription: document.getElementById('prescription').value,
+            histamine: document.getElementById('histamine').value,
+            saline: document.getElementById('saline').value,
+            beefExt: document.getElementById('beefExt').value,
+            porkExt: document.getElementById('porkExt').value,
+            beefRaw: document.getElementById('beefRaw').value,
+            porkRaw: document.getElementById('porkRaw').value,
+            milk: document.getElementById('milk').value,
+            gelatin: document.getElementById('gelatin').value,
+            prawns: document.getElementById('prawns').value,
+            tuna: document.getElementById('tuna').value,
+            salmon: document.getElementById('salmon').value,
+            eggs: document.getElementById('eggs').value,
+            chicken: document.getElementById('chicken').value,
+            dustMite: document.getElementById('dustMite').value,
+            storageMite: document.getElementById('storageMite').value,
+            cockroach: document.getElementById('cockroach').value,
+            cat: document.getElementById('cat').value,
+            dog: document.getElementById('dog').value,
+            mould: document.getElementById('mould').value,
+            grass: document.getElementById('grass').value,
+            weed: document.getElementById('weed').value,
+            aspergillus: document.getElementById('aspergillus').value,
+            wheat: document.getElementById('wheat').value,
+            ivPen: document.getElementById('ivPen').value,
+            oralPen: document.getElementById('oralPen').value,
+            amox: document.getElementById('amox').value,
+            coAmox: document.getElementById('coAmox').value,
+            cefalexin: document.getElementById('cefalexin').value,
+            cefuroxime: document.getElementById('cefuroxime').value,
+            cefotaxime: document.getElementById('cefotaxime').value,
+            mero: document.getElementById('mero').value,
+            omep: document.getElementById('omep').value,
+            infliximab: document.getElementById('infliximab').value
+        };
+
+        // Post request to Google Apps Script
+        fetch(WEB_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors', // Essential for Google Script endpoint execution
+            cache: 'no-cache',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        })
+        .then(() => {
+            statusMsg.style.backgroundColor = "#d4edda";
+            statusMsg.style.color = "#155724";
+            statusMsg.innerText = "Record successfully committed to ledger database.";
+            submitBtn.innerText = "Saved";
+            currentSubmittedData = formData;
+            document.getElementById('downloadWordBtn').style.display = "inline-block";
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            statusMsg.style.backgroundColor = "#f8d7da";
+            statusMsg.style.color = "#721c24";
+            statusMsg.innerText = "Connection execution error. Please try again.";
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Submit & Save Record";
+        });
+    });
+
+    // Handle Word Document Generation (.docx)
+    document.getElementById('downloadWordBtn').addEventListener('click', function() {
+        if (!currentSubmittedData) return;
+        generateWordDocument(currentSubmittedData);
+    });
+
+    function generateWordDocument(data) {
+        const { Document, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, BorderStyle, HeadingLevel } = docx;
+
+        const borderStyle = { style: BorderStyle.SINGLE, size: 4, color: "DEE2E6" };
+        const cellPadding = { top: 100, bottom: 100, left: 150, right: 150 };
+
+        function makeCell(text, bold = false, width = 50, colspan = 1) {
+            return new TableCell({
+                children: [new Paragraph({ children: [new TextRun({ text: text || "-", bold: bold, size: 22 })] })],
+                width: { size: width, type: WidthType.PERCENTAGE },
+                columnSpan: colspan,
+                borders: { top: borderStyle, bottom: borderStyle, left: borderStyle, right: borderStyle },
+                margins: cellPadding
+            });
+        }
+
+        const doc = new Document({
+            sections: [{
+                properties: {},
+                children: [
+                    new Paragraph({ text: "ALLERGY CLINIC – PATIENT HISTORY RECORD", heading: HeadingLevel.HEADING_1, alignment: "center" }),
+                    new Paragraph({ text: "\n" }),
+                    
+                    new Paragraph({ text: "1. Patient Demographics", heading: HeadingLevel.HEADING_2 }),
+                    new Table({
+                        width: { size: 100, type: WidthType.PERCENTAGE },
+                        rows: [
+                            new TableRow({ children: [makeCell("Name", true, 25), makeCell(data.name, false, 25), makeCell("Reg Number", true, 25), makeCell(data.regNumber, false, 25)] }),
+                            new TableRow({ children: [makeCell("Age (Years) / Gender", true, 25), makeCell(`${data.age}Y / ${data.gender}`, false, 25), makeCell("Date", true, 25), makeCell(data.date, false, 25)] }),
+                            new TableRow({ children: [makeCell("Contact Number", true, 25), makeCell(data.contact, false, 25), makeCell("Hometown", true, 25), makeCell(data.hometown, false, 25)] }),
+                            new TableRow({ children: [makeCell("Occupation", true, 25), makeCell(data.occupation, false, 25), makeCell("Referred By", true, 25), makeCell(data.referredBy, false, 25)] })
+                        ]
+                    }),
+                    new Paragraph({ text: "\n" }),
+
+                    new Paragraph({ text: "2. Clinical Presentation", heading: HeadingLevel.HEADING_2 }),
+                    new Table({
+                        width: { size: 100, type: WidthType.PERCENTAGE },
+                        rows: [
+                            new TableRow({ children: [makeCell("Age of Onset (Years)", true, 25), makeCell(data.ageOnset, false, 25), makeCell("Anaphylaxis Episodes", true, 25), makeCell(data.anaphylaxis, false, 25)] }),
+                            new TableRow({ children: [makeCell("Presenting Complaint", true, 25), makeCell(data.complaint, false, 75, 3)] }),
+                            new TableRow({ children: [makeCell("Carries Epipen / Adrenaline", true, 25), makeCell(data.epipen, false, 75, 3)] })
+                        ]
+                    }),
+                    new Paragraph({ text: "\n" }),
+
+                    new Paragraph({ text: "3. Allergy & Medical History", heading: HeadingLevel.HEADING_2 }),
+                    new Table({
+                        width: { size: 100, type: WidthType.PERCENTAGE },
+                        rows: [
+                            new TableRow({ children: [makeCell("General Allergic History", true, 25), makeCell(data.allergicHistory, false, 75, 3)] }),
+                            new TableRow({ children: [makeCell("Drug Allergies", true, 25), makeCell(data.drugAllergies, false, 25), makeCell("Food Allergies", true, 25), makeCell(data.foodAllergies, false, 25)] }),
+                            new TableRow({ children: [makeCell("Tick Bites", true, 25), makeCell(data.tickBites, false, 75, 3)] }),
+                            new TableRow({ children: [makeCell("Past Medical History", true, 25), makeCell(data.medicalHistory, false, 75, 3)] }),
+                            new TableRow({ children: [makeCell("Drug History", true, 25), makeCell(data.drugHistory, false, 75, 3)] }),
+                            new TableRow({ children: [makeCell("Past Surgical History", true, 25), makeCell(data.surgicalHistory, false, 75, 3)] }),
+                            new TableRow({ children: [makeCell("Family History", true, 25), makeCell(data.familyHistory, false, 75, 3)] })
+                        ]
+                    }),
+                    new Paragraph({ text: "\n" }),
+
+                    new Paragraph({ text: "4. Assessment & Management", heading: HeadingLevel.HEADING_2 }),
+                    new Table({
+                        width: { size: 100, type: WidthType.PERCENTAGE },
+                        rows: [
+                            new TableRow({ children: [makeCell("Problem List", true, 25), makeCell(data.problems, false, 75, 3)] }),
+                            new TableRow({ children: [makeCell("Probable Diagnosis", true, 25), makeCell(data.diagnosis, false, 25), makeCell("Review Plan", true, 25), makeCell(data.review, false, 25)] }),
+                            new TableRow({ children: [makeCell("Investigations Ordered", true, 25), makeCell(data.investigations, false, 75, 3)] }),
+                            new TableRow({ children: [makeCell("Management Plan", true, 25), makeCell(data.management, false, 75, 3)] }),
+                            new TableRow({ children: [makeCell("Prescription", true, 25), makeCell(data.prescription, false, 75, 3)] })
+                        ]
+                    }),
+                    new Paragraph({ text: "\n" }),
+
+                    new Paragraph({ text: "5. Skin Prick Test Results", heading: HeadingLevel.HEADING_2 }),
+                    new Paragraph({ text: `Positive Control (0.1% Histamine): ${data.histamine || "-"}     Negative Control (N. Saline): ${data.saline || "-"}\n\n` }),
+                    
+                    new Table({
+                        width: { size: 100, type: WidthType.PERCENTAGE },
+                        rows: [
+                            new TableRow({ children: [makeCell("Allergen", true, 20), makeCell("Result", true, 13), makeCell("Allergen", true, 20), makeCell("Result", true, 13), makeCell("Allergen", true, 20), makeCell("Result", true, 14)] }),
+                            new TableRow({ children: [makeCell("Beef (Extract)"), makeCell(data.beefExt), makeCell("House Dust Mite"), makeCell(data.dustMite), makeCell("IV Penicillin"), makeCell(data.ivPen)] }),
+                            new TableRow({ children: [makeCell("Pork (Extract)"), makeCell(data.porkExt), makeCell("Storage Mite"), makeCell(data.storageMite), makeCell("Oral Penicillin"), makeCell(data.oralPen)] }),
+                            new TableRow({ children: [makeCell("Beef (Raw)"), makeCell(data.beefRaw), makeCell("Cockroach"), makeCell(data.cockroach), makeCell("Amoxicillin"), makeCell(data.amox)] }),
+                            new TableRow({ children: [makeCell("Pork (Raw)"), makeCell(data.porkRaw), makeCell("Cat epithelium"), makeCell(data.cat), makeCell("Co-amoxiclav"), makeCell(data.coAmox)] }),
+                            new TableRow({ children: [makeCell("Milk"), makeCell(data.milk), makeCell("Dog epithelium"), makeCell(data.dog), makeCell("Cefalexin"), makeCell(data.cefalexin)] }),
+                            new TableRow({ children: [makeCell("Gelatin"), makeCell(data.gelatin), makeCell("Mould Mix"), makeCell(data.mould), makeCell("Cefuroxime"), makeCell(data.cefuroxime)] }),
+                            new TableRow({ children: [makeCell("Prawns"), makeCell(data.prawns), makeCell("Grass Pollens"), makeCell(data.grass), makeCell("Cefotaxime/Ceftriaxone"), makeCell(data.cefotaxime)] }),
+                            new TableRow({ children: [makeCell("Tuna"), makeCell(data.tuna), makeCell("Weed Pollens"), makeCell(data.weed), makeCell("Meropenem"), makeCell(data.mero)] }),
+                            new TableRow({ children: [makeCell("Salmon"), makeCell(data.salmon), makeCell("Aspergillus"), makeCell(data.aspergillus), makeCell("Omeprazole"), makeCell(data.omep)] }),
+                            new TableRow({ children: [makeCell("Eggs"), makeCell(data.eggs), makeCell("Wheat"), makeCell(data.wheat), makeCell("Infliximab/Adalimumab"), makeCell(data.infliximab)] }),
+                            new TableRow({ children: [makeCell("Chicken"), makeCell(data.chicken), makeCell(""), makeCell(""), makeCell(""), makeCell("")] })
+                        ]
+                    })
+                ]
+            }]
+        });
+
+        docx.Packer.toBlob(doc).then(blob => {
+            saveAs(blob, `Allergy_Record_${data.regNumber || 'Unknown'}.docx`);
+        });
+    }
+</script>
+</body>
+</html>
