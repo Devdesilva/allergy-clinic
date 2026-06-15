@@ -277,35 +277,39 @@
     }
 
     function deleteRecordFromDatabase(regNumber, name) {
-        // 1. SHOW THE CONFIRMATION MESSAGE
-        if (!confirm(`⚠️ CRITICAL WARNING:\n\nAre you absolutely sure you want to permanently delete the clinical record for ${name} (Reg No: ${regNumber})?\n\nThis will completely wipe the entry from both this dashboard and the main Excel sheet log. This action cannot be undone.`)) {
-            return; // If they click cancel, do nothing
-        }
-        
-        // 2. SHOW LOADING INDICATOR
-        const statusBox = document.getElementById('statusDisplay');
-        statusBox.style.display = "block";
-        statusBox.innerText = `Wiping record for ${name} from live ledger database...`;
-
-        // 3. SEND POST COMMAND TO GOOGLE SCRIPT
-        fetch(WEB_APP_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            cache: 'no-cache',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: "delete", regNumber: regNumber })
-        })
-        .then(() => {
-            // Force background refresh to update registry table view after 1.5 seconds
-            setTimeout(() => {
-                fetchRecordsFromLedger();
-            }, 1500); 
-        })
-        .catch(err => {
-            console.error(err);
-            alert("Failed to securely delete record. Check network connection.");
-        });
+    // 1. SHOW THE CONFIRMATION MESSAGE
+    if (!confirm(`⚠️ CRITICAL WARNING:\n\nAre you absolutely sure you want to permanently delete the clinical record for ${name} (Reg No: ${regNumber})?\n\nThis will completely wipe the entry from both this dashboard and the main Excel sheet log. This action cannot be undone.`)) {
+        return; // If they click cancel, do nothing
     }
+    
+    // 2. SHOW LOADING INDICATOR
+    const statusBox = document.getElementById('statusDisplay');
+    statusBox.style.display = "block";
+    statusBox.innerText = `Wiping record for ${name} from live ledger database...`;
+
+    // Convert to URLSearchParams for clean delivery
+    let params = new URLSearchParams();
+    params.append("action", "delete");
+    params.append("regNumber", regNumber);
+
+    // 3. SEND POST COMMAND TO GOOGLE SCRIPT
+    fetch(WEB_APP_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        cache: 'no-cache',
+        body: params
+    })
+    .then(() => {
+        // Force background refresh to update registry table view after 1.5 seconds
+        setTimeout(() => {
+            fetchRecordsFromLedger();
+        }, 1500); 
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Failed to securely delete record. Check network connection.");
+    });
+}
 
     function filterRegistry() {
         const nameQuery = document.getElementById('searchName').value.toLowerCase();
@@ -489,62 +493,57 @@
     }
 
     function submitRecordEditsToCloud() {
-        if (!activeSelectedRecord) return;
+    if (!activeSelectedRecord) return;
 
-        // 1. VISUAL STATUS LOCKOUT INSIDE THE OVERLAY
-        const actionBtnContainer = document.getElementById('modalActionButtons');
-        actionBtnContainer.innerHTML = `<span style="color: var(--primary); font-weight: bold; font-size:14px;">⏳ Syncing updates...</span>`;
+    // 1. VISUAL STATUS LOCKOUT INSIDE THE OVERLAY
+    const actionBtnContainer = document.getElementById('modalActionButtons');
+    actionBtnContainer.innerHTML = `<span style="color: var(--primary); font-weight: bold; font-size:14px;">⏳ Syncing updates...</span>`;
 
-        // 2. PARSE MODIFIED DATA FROM FORM ELEMENT
-        const formElement = document.getElementById('editPatientForm');
-        const formData = new FormData(formElement);
-        
-        // Core payload initialization with the action directive and the unique primary key mapping
-        let payload = {
-            action: "update",
-            RegNumber: activeSelectedRecord.RegNumber 
-        };
+    // 2. PARSE MODIFIED DATA FROM FORM ELEMENT
+    const formElement = document.getElementById('editPatientForm');
+    const formData = new FormData(formElement);
+    
+    // Use URLSearchParams to ensure perfect form parameter mapping for Google Apps Script
+    let params = new URLSearchParams();
+    params.append("action", "update");
+    params.append("RegNumber", activeSelectedRecord.RegNumber); // Vital row lookup key
 
-        // Dynamically append all editable fields found inside the input elements
+    formData.forEach((value, key) => {
+        params.append(key, value);
+    });
+
+    // 3. SECURE URL-ENCODED POST DISPATCH TO LIVE LEDGER
+    fetch(WEB_APP_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        cache: 'no-cache',
+        body: params // Sent cleanly as application/x-www-form-urlencoded
+    })
+    .then(() => {
+        // 4. INSTANT LOCAL MEMORY REFRESH FOR SNAPPY UI EXPERIENCES
         formData.forEach((value, key) => {
-            payload[key] = value;
+            activeSelectedRecord[key] = value;
         });
 
-        // 3. SECURE CROSS-ORIGIN POST DISPATCH TO LIVE LEDGER
-        fetch(WEB_APP_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            cache: 'no-cache',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        })
-        .then(() => {
-            // 4. INSTANT LOCAL MEMORY REFRESH FOR SNAPPY UI EXPERIENCES
-            for (let key in payload) {
-                if (key !== "action") {
-                    activeSelectedRecord[key] = payload[key];
-                }
-            }
+        // Toggle back into read-only layout view with fresh updates applied
+        isEditMode = false;
+        displayRecord();
 
-            // Toggle back into read-only layout view with fresh updates applied
-            isEditMode = false;
-            displayRecord();
-
-            // 5. RE-TRIGGER BULK SERVER BACKGROUND SYNC FOR MAIN REGISTRY REGISTRATION TABLE
-            const statusBox = document.getElementById('statusDisplay');
-            statusBox.style.display = "block";
-            statusBox.innerText = "Edits synced successfully. Re-indexing live database registry rows...";
-            
-            setTimeout(() => {
-                fetchRecordsFromLedger();
-            }, 1500);
-        })
-        .catch(err => {
-            console.error("Database sync fault: ", err);
-            alert("Failed to push updates securely to Google Sheets ledger. Please check network connectivity.");
-            displayRecord(); // Recover command control layout configuration buttons
-        });
-    }
+        // 5. RE-TRIGGER BULK SERVER BACKGROUND SYNC FOR MAIN REGISTRY REGISTRATION TABLE
+        const statusBox = document.getElementById('statusDisplay');
+        statusBox.style.display = "block";
+        statusBox.innerText = "Edits synced successfully. Re-indexing live database registry rows...";
+        
+        setTimeout(() => {
+            fetchRecordsFromLedger();
+        }, 1500);
+    })
+    .catch(err => {
+        console.error("Database sync fault: ", err);
+        alert("Failed to push updates securely to Google Sheets ledger. Please check network connectivity.");
+        displayRecord(); // Recover command control layout configuration buttons
+    });
+}
 
     function closeModal() {
         document.getElementById('recordModal').style.display = "none";
