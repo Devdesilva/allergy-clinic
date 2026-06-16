@@ -231,7 +231,15 @@
         <section>
             <h2>Section 3: Allergy & Medical History</h2>
             <div class="grid-3">
-                <div class="form-group full-width"><label>General Allergic History</label><textarea id="allergicHistory"></textarea></div>
+                <div class="form-group full-width">
+    <label>General Allergic History</label>
+    <div style="display:flex; flex-wrap:wrap; gap:15px; padding:10px; border:1px solid var(--border); border-radius:4px;">
+        <label style="font-weight:normal;"><input type="checkbox" name="allergicHistory" value="Food"> Food</label>
+        <label style="font-weight:normal;"><input type="checkbox" name="allergicHistory" value="Drug"> Drug</label>
+        <label style="font-weight:normal;"><input type="checkbox" name="allergicHistory" value="Plasters"> Plasters</label>
+        <label style="font-weight:normal;"><input type="checkbox" name="allergicHistory" value="Vaccine"> Vaccine</label>
+    </div>
+</div>
                 <div class="form-group"><label>Drug Allergies</label><input type="text" id="drugAllergies"></div>
                 <div class="form-group"><label>Food Allergies</label><input type="text" id="foodAllergies"></div>
                 <div class="form-group">
@@ -359,7 +367,7 @@
             epipen: document.querySelector('input[name="epipen"]:checked').value,
             complaint: document.getElementById('complaint').value,
             investigationsDone: document.getElementById('investigationsDone').value,
-            allergicHistory: document.getElementById('allergicHistory').value,
+            allergicHistory: Array.from(document.querySelectorAll('input[name="allergicHistory"]:checked')).map(cb => cb.value).join(', '),
             drugAllergies: document.getElementById('drugAllergies').value,
             foodAllergies: document.getElementById('foodAllergies').value,
             tickBites: document.querySelector('input[name="tickBites"]:checked').value,
