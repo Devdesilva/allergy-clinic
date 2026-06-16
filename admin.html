@@ -612,7 +612,7 @@
                     rowId: i,
                     rowNumber: i + 2};
                   };
-                headers.forEach((h, j) => obj[h] = row[j]);
+                headers.forEach((h, j) => obj[h] = row[j] !== undefined ? row[j] : '';
                 return obj;
             });
             renderRegistryRows(parsedRecords);
@@ -1027,42 +1027,71 @@
 
     /* ── SAVE EDITS ───────────────────────────────────────── */
     function submitRecordEditsToCloud() {
-        if (!activeSelectedRecord) return;
+    if (!activeSelectedRecord) return;
 
-        const btnGroup = document.getElementById('modalBtnGroup');
-        btnGroup.innerHTML = `<span style="color:#94a3b8; font-size:14px; font-weight:600;">⏳ Saving…</span>`;
+    const btnGroup = document.getElementById('modalBtnGroup');
+    btnGroup.innerHTML = `<span style="color:#94a3b8; font-size:14px; font-weight:600;">⏳ Saving…</span>`;
 
-        const formData = new FormData(document.getElementById('editPatientForm'));
-        const payload  = { action: "update", rowNumber: activeSelectedRecord.rowNumber };
-        formData.forEach((val, key) => payload[key] = val);
-
-        fetch(WEB_APP_URL, {
-            method: 'POST',
-            cache: 'no-cache',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify(payload)
-        })
-        .then(r => r.json())
-        .then(result => {
-            if (result.status !== 'success') throw new Error(result.message || 'Unknown error');
-
-            // Update local memory
-            formData.forEach((val, key) => activeSelectedRecord[key] = val);
-            const idx = parsedRecords.findIndex(r => r._rowId === activeSelectedRecord._rowId);
-            if (idx !== -1) formData.forEach((val, key) => parsedRecords[idx][key] = val);
-
-            isEditMode = false;
-            renderModalContent();
-
-            showStatus('✅ Record updated successfully.', 'success');
-            setTimeout(() => { hideStatus(); fetchRecordsFromLedger(); }, 2200);
-        })
-        .catch(err => {
-            alert('❌ Failed to save: ' + err.message);
-            isEditMode = true;
-            renderModalContent();
-        });
+    const form = document.getElementById('editPatientForm');
+    const formData = new FormData(form);
+    const payload = { 
+        action: "update", 
+        rowNumber: activeSelectedRecord.rowNumber 
+    };
+    
+    // Build payload with all fields
+    for (let [key, val] of formData.entries()) {
+        payload[key] = val;
     }
+    
+    // Also include any fields that might not be in the form (readonly fields in non-edit mode)
+    // Get all input/textarea elements including those that might be divs
+    const allFields = form.querySelectorAll('input, textarea, select');
+    allFields.forEach(field => {
+        if (field.name && !payload.hasOwnProperty(field.name)) {
+            payload[field.name] = field.value;
+        }
+    });
+
+    fetch(WEB_APP_URL, {
+        method: 'POST',
+        cache: 'no-cache',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(result => {
+        if (result.status !== 'success') throw new Error(result.message || 'Unknown error');
+
+        // Update local memory with all form values
+        for (let [key, val] of formData.entries()) {
+            activeSelectedRecord[key] = val;
+        }
+        
+        // Also update the record in parsedRecords array
+        const idx = parsedRecords.findIndex(r => r._rowId === activeSelectedRecord._rowId);
+        if (idx !== -1) {
+            for (let [key, val] of formData.entries()) {
+                parsedRecords[idx][key] = val;
+            }
+        }
+
+        isEditMode = false;
+        renderModalContent();
+        renderRegistryRows(parsedRecords); // Refresh the table immediately
+
+        showStatus('✅ Record updated successfully.', 'success');
+        setTimeout(() => { 
+            hideStatus(); 
+            fetchRecordsFromLedger(); // Full refresh from server
+        }, 2200);
+    })
+    .catch(err => {
+        alert('❌ Failed to save: ' + err.message);
+        isEditMode = true;
+        renderModalContent();
+    });
+}
 
     /* ── WORD DOC DOWNLOAD ────────────────────────────────── */
     function downloadWordDoc() {
