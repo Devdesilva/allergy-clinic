@@ -235,7 +235,10 @@
             // Map table rows to object arrays dynamically matching standard layout
             const headers = data[0];
             parsedRecords = data.slice(1).map((row, rIdx) => {
-                let recordObj = { _rowId: rIdx };
+                let recordObj = {
+        _rowId: rIdx,
+        _sheetRow: rIdx + 2
+    };
                 headers.forEach((header, hIdx) => {
                     recordObj[header] = row[hIdx];
                 });
@@ -266,7 +269,15 @@
                 <td><strong>${item.Name || 'Unlabeled'}</strong></td>
                 <td>${item.RegNumber || '-'}</td>
                 <td><span style="color:var(--secondary); font-weight:600;">${item.ProbableDiagnosis || 'No Diagnosis'}</span></td>
-                <td><button class="btn-action" onclick="viewRecordDetails(${item._rowId})">\u{1F441} View Full Record</button></td>
+                <td><button class="btn-action"
+onclick="viewRecordDetails(${item._rowId})">
+👁 View
+</button>
+
+<button class="btn-action"
+onclick="editRecord(${item._rowId})">
+✏ Edit
+</button></td>
             `;
             tbody.appendChild(tr);
         });
@@ -371,6 +382,90 @@
         document.getElementById('modalDataBody').innerHTML = htmlContent;
         document.getElementById('recordModal').style.display = "block";
     }
+
+    function editRecord(rowId){
+
+    activeSelectedRecord =
+      parsedRecords.find(r => r._rowId === rowId);
+
+    if(!activeSelectedRecord) return;
+
+    const html = `
+        <h3>Edit Patient</h3>
+
+        <label>Name</label>
+        <input id="editName"
+               value="${activeSelectedRecord.Name || ''}">
+
+        <br><br>
+
+        <label>Reg Number</label>
+        <input id="editReg"
+               value="${activeSelectedRecord.RegNumber || ''}">
+
+        <br><br>
+
+        <label>Diagnosis</label>
+        <input id="editDiagnosis"
+               value="${activeSelectedRecord.ProbableDiagnosis || ''}">
+
+        <br><br>
+
+        <button onclick="saveRecordChanges()">
+            Save Changes
+        </button>
+    `;
+
+    document.getElementById(
+      "modalDataBody"
+    ).innerHTML = html;
+
+    document.getElementById(
+      "recordModal"
+    ).style.display = "block";
+}
+
+    function saveRecordChanges(){
+
+    const updatedData = {
+
+        action:"update",
+
+        rowNumber:
+            activeSelectedRecord._sheetRow,
+
+        name:
+            document.getElementById("editName").value,
+
+        regNumber:
+            document.getElementById("editReg").value,
+
+        diagnosis:
+            document.getElementById("editDiagnosis").value
+    };
+
+    fetch(WEB_APP_URL,{
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body:JSON.stringify(updatedData)
+    })
+    .then(()=>{
+
+        alert("Record Updated");
+
+        location.reload();
+
+    })
+    .catch(err=>{
+
+        console.error(err);
+
+        alert("Update failed");
+
+    });
+}
 
     function closeModal() {
         document.getElementById('recordModal').style.display = "none";
