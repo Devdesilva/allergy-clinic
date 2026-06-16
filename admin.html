@@ -407,7 +407,13 @@ if (item.Date) {
         html += '<div class="form-group"><label>Investigations Done</label><textarea name="InvestigationsDone">' + escapeHTML(rec.InvestigationsDone || '') + '</textarea></div>';
 
         html += '<h3>Section 3: Allergy & Medical History</h3>';
-        html += '<div class="form-group"><label>General Allergic History</label><textarea name="GeneralAllergicHistory">' + escapeHTML(rec.GeneralAllergicHistory || '') + '</textarea></div>';
+        var allergicSelected = (rec.GeneralAllergicHistory || '').split(',').map(function(s) { return s.trim(); });
+        html += '<div class="form-group"><label>General Allergic History</label><div style="display:flex; flex-wrap:wrap; gap:15px; padding:10px; border:1px solid #dee2e6; border-radius:4px;">';
+        html += '<label style="font-weight:normal;"><input type="checkbox" name="GeneralAllergicHistory" value="Food" ' + (allergicSelected.indexOf('Food') !== -1 ? 'checked' : '') + '> Food</label>';
+        html += '<label style="font-weight:normal;"><input type="checkbox" name="GeneralAllergicHistory" value="Drug" ' + (allergicSelected.indexOf('Drug') !== -1 ? 'checked' : '') + '> Drug</label>';
+        html += '<label style="font-weight:normal;"><input type="checkbox" name="GeneralAllergicHistory" value="Plasters" ' + (allergicSelected.indexOf('Plasters') !== -1 ? 'checked' : '') + '> Plasters</label>';
+        html += '<label style="font-weight:normal;"><input type="checkbox" name="GeneralAllergicHistory" value="Vaccine" ' + (allergicSelected.indexOf('Vaccine') !== -1 ? 'checked' : '') + '> Vaccine</label>';
+        html += '</div></div>';
         html += '<div class="modal-grid">';
         html += '<div class="form-group"><label>Drug Allergies</label><input type="text" name="DrugAllergies" value="' + escapeHTML(rec.DrugAllergies || '') + '"></div>';
         html += '<div class="form-group"><label>Food Allergies</label><input type="text" name="FoodAllergies" value="' + escapeHTML(rec.FoodAllergies || '') + '"></div>';
@@ -471,15 +477,23 @@ if (item.Date) {
     };
     
     var elements = form.querySelectorAll('input, select, textarea');
-    elements.forEach(function(el) {
-        if (el.name) {
-            if (el.type === 'radio') {
-                if (el.checked) payload[el.name] = el.value;
-            } else {
-                payload[el.name] = el.value;
-            }
+var checkboxGroups = {};
+elements.forEach(function(el) {
+    if (el.name) {
+        if (el.type === 'radio') {
+            if (el.checked) payload[el.name] = el.value;
+        } else if (el.type === 'checkbox') {
+            if (!checkboxGroups[el.name]) checkboxGroups[el.name] = [];
+            if (el.checked) checkboxGroups[el.name].push(el.value);
+        } else {
+            payload[el.name] = el.value;
         }
-    });
+    }
+});
+// Handle checkbox groups
+for (var key in checkboxGroups) {
+    payload[key] = checkboxGroups[key].join(', ');
+}
 
     console.log("Saving payload:", JSON.stringify(payload));
 
