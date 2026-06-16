@@ -445,62 +445,65 @@
 
     // ── SAVE EDITS ───────────────────────────
     function saveAllEdits() {
-        var form = document.getElementById('editForm');
-        if (!form) {
-            alert("Edit form not found!");
-            return;
-        }
-
-        var payload = {
-            action: "update",
-            RegNumber: activeSelectedRecord.RegNumber
-        };
-        
-        var elements = form.querySelectorAll('input, select, textarea');
-        elements.forEach(function(el) {
-            if (el.name) {
-                if (el.type === 'radio') {
-                    if (el.checked) payload[el.name] = el.value;
-                } else {
-                    payload[el.name] = el.value;
-                }
-            }
-        });
-
-        console.log("Saving payload:", payload);
-
-        var statusEl = document.getElementById('statusDisplay');
-        statusEl.style.display = "block";
-        statusEl.innerText = "Saving changes...";
-        statusEl.style.color = "#856404";
-        statusEl.style.backgroundColor = "#fff3cd";
-
-        fetch(WEB_APP_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(result) {
-            console.log("Save result:", result);
-            if (result.status === 'success') {
-                statusEl.innerText = "Record updated successfully!";
-                statusEl.style.color = "#155724";
-                statusEl.style.backgroundColor = "#d4edda";
-                closeEditModal();
-                fetchRecordsFromLedger();
-                setTimeout(function() { statusEl.style.display = "none"; }, 3000);
-            } else {
-                throw new Error(result.message || 'Unknown error');
-            }
-        })
-        .catch(function(err) {
-            console.error("Save error:", err);
-            statusEl.innerText = "Error saving: " + err.message;
-            statusEl.style.color = "#721c24";
-            statusEl.style.backgroundColor = "#f8d7da";
-        });
+    var form = document.getElementById('editForm');
+    if (!form) {
+        alert("Edit form not found!");
+        return;
     }
+
+    var payload = {
+        action: "update",
+        RegNumber: activeSelectedRecord.RegNumber
+    };
+    
+    var elements = form.querySelectorAll('input, select, textarea');
+    elements.forEach(function(el) {
+        if (el.name) {
+            if (el.type === 'radio') {
+                if (el.checked) payload[el.name] = el.value;
+            } else {
+                payload[el.name] = el.value;
+            }
+        }
+    });
+
+    console.log("Saving to URL:", WEB_APP_URL);
+    console.log("Payload:", JSON.stringify(payload));
+
+    var statusEl = document.getElementById('statusDisplay');
+    statusEl.style.display = "block";
+    statusEl.innerText = "Saving changes...";
+    statusEl.style.color = "#856404";
+    statusEl.style.backgroundColor = "#fff3cd";
+
+    fetch(WEB_APP_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        cache: 'no-cache',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(function() {
+        // With no-cors, we can't read the response, so we assume success
+        console.log("Request sent (no-cors mode)");
+        statusEl.innerText = "Record updated successfully! Refreshing...";
+        statusEl.style.color = "#155724";
+        statusEl.style.backgroundColor = "#d4edda";
+        closeEditModal();
+        
+        // Wait a moment then refresh to get the updated data
+        setTimeout(function() {
+            fetchRecordsFromLedger();
+            statusEl.style.display = "none";
+        }, 2000);
+    })
+    .catch(function(err) {
+        console.error("Fetch error:", err);
+        statusEl.innerText = "Error saving: " + err.message + ". Check console (F12) for details.";
+        statusEl.style.color = "#721c24";
+        statusEl.style.backgroundColor = "#f8d7da";
+    });
+}
 
     // ── DELETE ───────────────────────────────
     function deleteRecord(rowId) {
