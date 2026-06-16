@@ -243,7 +243,18 @@
         
         list.forEach(function(item) {
             var tr = document.createElement('tr');
-            var dateVal = item.Date ? String(item.Date).split('T')[0] : 'N/A';
+            var dateVal = 'N/A';
+if (item.Date) {
+    var d = new Date(item.Date);
+    if (!isNaN(d.getTime())) {
+        var day = String(d.getDate()).padStart(2, '0');
+        var month = String(d.getMonth() + 1).padStart(2, '0');
+        var year = d.getFullYear();
+        dateVal = day + '/' + month + '/' + year;
+    } else {
+        dateVal = String(item.Date).split('T')[0];
+    }
+}
             tr.innerHTML = 
                 '<td>' + dateVal + '</td>' +
                 '<td><strong>' + escapeHTML(item.Name || 'Unknown') + '</strong></td>' +
