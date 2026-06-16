@@ -301,7 +301,7 @@ if (item.Date) {
         XLSX.writeFile(wb, "Allergy_Clinic_Records.xlsx");
     }
 
-    function printRecord(rowId) {
+   function printRecord(rowId) {
     var rec = parsedRecords.find(function(r) { return r._rowId === rowId; });
     if (!rec) return;
 
@@ -311,64 +311,85 @@ if (item.Date) {
     
     var html = '<html><head><title>Print Record - ' + (rec.Name || 'Patient') + '</title>';
     html += '<style>';
-    html += 'body { font-family: Arial, sans-serif; padding: 20px; }';
-    html += 'h1 { text-align: center; color: #0056b3; }';
-    html += 'h2 { color: #17a2b8; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 20px; }';
+    html += 'body { font-family: Arial, sans-serif; padding: 20px; font-size: 13px; }';
+    html += 'h1 { text-align: center; color: #0056b3; font-size: 18px; }';
+    html += 'h2 { color: #17a2b8; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 20px; font-size: 15px; }';
     html += 'table { width: 100%; border-collapse: collapse; margin: 10px 0; }';
-    html += 'td { padding: 8px; border: 1px solid #ddd; vertical-align: top; }';
-    html += '.label { font-weight: bold; background: #f8f9fa; width: 30%; }';
-    html += '@media print { body { padding: 0; } button { display: none; } }';
+    html += 'td { padding: 6px 8px; border: 1px solid #ddd; vertical-align: top; }';
+    html += '.label { font-weight: bold; background: #f8f9fa; width: 25%; }';
+    html += '.allergen-table td { font-size: 12px; padding: 4px 6px; }';
+    html += '.allergen-table .header { background: #0056b3; color: white; font-weight: bold; text-align: center; }';
+    html += '@media print { body { padding: 0; } .no-print { display: none; } }';
     html += '</style></head><body>';
     
-    html += '<h1>Allergy Clinic - Patient Record</h1>';
-    html += '<button onclick="window.print()" style="padding:10px 20px;font-size:16px;margin-bottom:15px;">🖨 Print This Page</button>';
+    html += '<h1>ALLERGY CLINIC – PATIENT HISTORY RECORD</h1>';
+    html += '<button class="no-print" onclick="window.print()" style="padding:10px 20px;font-size:16px;margin-bottom:15px;">🖨 Print This Page</button>';
     
-    html += '<h2>Section 1: Demographics</h2>';
+    // Section 1
+    html += '<h2>1. Patient Demographics</h2>';
     html += '<table>';
     html += '<tr><td class="label">Name</td><td>' + (rec.Name || '-') + '</td><td class="label">Reg Number</td><td>' + (rec.RegNumber || '-') + '</td></tr>';
     html += '<tr><td class="label">Age / Gender</td><td>' + (rec.Age || '-') + 'Y / ' + (rec.Gender || '-') + '</td><td class="label">Date</td><td>' + dateStr + '</td></tr>';
-    html += '<tr><td class="label">Contact</td><td>' + (rec.ContactNumber || '-') + '</td><td class="label">Hometown</td><td>' + (rec.Hometown || '-') + '</td></tr>';
+    html += '<tr><td class="label">Contact Number</td><td>' + (rec.ContactNumber || '-') + '</td><td class="label">Hometown</td><td>' + (rec.Hometown || '-') + '</td></tr>';
     html += '<tr><td class="label">Occupation</td><td>' + (rec.Occupation || '-') + '</td><td class="label">Referred By</td><td>' + (rec.ReferredBy || '-') + '</td></tr>';
     html += '</table>';
     
-    html += '<h2>Section 2: Clinical Presentation</h2>';
+    // Section 2
+    html += '<h2>2. Clinical Presentation</h2>';
     html += '<table>';
-    html += '<tr><td class="label">Age of Onset</td><td>' + (rec.AgeOfOnset || '-') + '</td><td class="label">Anaphylaxis</td><td>' + (rec.Anaphylaxis || '-') + '</td></tr>';
-    html += '<tr><td class="label">Carries Epipen</td><td>' + (rec.CarriesEpipen || '-') + '</td><td class="label"></td><td></td></tr>';
+    html += '<tr><td class="label">Age of Onset (Years)</td><td>' + (rec.AgeOfOnset || '-') + '</td><td class="label">Anaphylaxis Episodes</td><td>' + (rec.Anaphylaxis || '-') + '</td></tr>';
     html += '<tr><td class="label">Presenting Complaint</td><td colspan="3">' + (rec.PresentingComplaint || '-').replace(/\n/g, '<br>') + '</td></tr>';
     html += '<tr><td class="label">Investigations Done</td><td colspan="3">' + (rec.InvestigationsDone || '-').replace(/\n/g, '<br>') + '</td></tr>';
+    html += '<tr><td class="label">Carries Epipen / Adrenaline</td><td colspan="3">' + (rec.CarriesEpipen || '-') + '</td></tr>';
     html += '</table>';
     
-    html += '<h2>Section 3: Allergy & Medical History</h2>';
+    // Section 3
+    html += '<h2>3. Allergy & Medical History</h2>';
     html += '<table>';
     html += '<tr><td class="label">General Allergic History</td><td colspan="3">' + (rec.GeneralAllergicHistory || '-') + '</td></tr>';
     html += '<tr><td class="label">Drug Allergies</td><td>' + (rec.DrugAllergies || '-') + '</td><td class="label">Food Allergies</td><td>' + (rec.FoodAllergies || '-') + '</td></tr>';
-    html += '<tr><td class="label">Tick Bites</td><td>' + (rec.TickBites || '-') + '</td><td class="label"></td><td></td></tr>';
+    html += '<tr><td class="label">Tick Bites</td><td colspan="3">' + (rec.TickBites || '-') + '</td></tr>';
     html += '<tr><td class="label">Past Medical History</td><td colspan="3">' + (rec.PastMedicalHistory || '-').replace(/\n/g, '<br>') + '</td></tr>';
     html += '<tr><td class="label">Drug History</td><td colspan="3">' + (rec.DrugHistory || '-').replace(/\n/g, '<br>') + '</td></tr>';
-    html += '<tr><td class="label">Surgical History</td><td colspan="3">' + (rec.PastSurgicalHistory || '-').replace(/\n/g, '<br>') + '</td></tr>';
+    html += '<tr><td class="label">Past Surgical History</td><td colspan="3">' + (rec.PastSurgicalHistory || '-').replace(/\n/g, '<br>') + '</td></tr>';
     html += '<tr><td class="label">Family History</td><td colspan="3">' + (rec.FamilyHistory || '-').replace(/\n/g, '<br>') + '</td></tr>';
     html += '</table>';
     
-    html += '<h2>Section 4: Assessment</h2>';
+    // Section 4
+    html += '<h2>4. Assessment & Management</h2>';
     html += '<table>';
     html += '<tr><td class="label">Problem List</td><td colspan="3">' + (rec.ProblemList || '-').replace(/\n/g, '<br>') + '</td></tr>';
-    html += '<tr><td class="label">Probable Diagnosis</td><td colspan="3">' + (rec.ProbableDiagnosis || '-').replace(/\n/g, '<br>') + '</td></tr>';
-    html += '<tr><td class="label">Review Plan</td><td>' + (rec.ReviewPlan || '-') + '</td><td class="label"></td><td></td></tr>';
+    html += '<tr><td class="label">Probable Diagnosis</td><td>' + (rec.ProbableDiagnosis || '-').replace(/\n/g, '<br>') + '</td><td class="label">Review Plan</td><td>' + (rec.ReviewPlan || '-') + '</td></tr>';
     html += '<tr><td class="label">Investigations Ordered</td><td colspan="3">' + (rec.InvestigationsOrdered || '-').replace(/\n/g, '<br>') + '</td></tr>';
     html += '<tr><td class="label">Management Plan</td><td colspan="3">' + (rec.ManagementPlan || '-').replace(/\n/g, '<br>') + '</td></tr>';
     html += '<tr><td class="label">Prescription</td><td colspan="3">' + (rec.Prescription || '-').replace(/\n/g, '<br>') + '</td></tr>';
     html += '</table>';
     
-    html += '<h2>Section 5: Skin Prick Test</h2>';
-    html += '<p><strong>Histamine:</strong> ' + (rec.Histamine || '-') + ' | <strong>Saline:</strong> ' + (rec.Saline || '-') + '</p>';
+    // Section 5
+    html += '<h2>5. Skin Prick Test Results</h2>';
+    html += '<p><strong>Positive Control (0.1% Histamine):</strong> ' + (rec.Histamine || '-') + ' &nbsp;&nbsp;&nbsp; <strong>Negative Control (N. Saline):</strong> ' + (rec.Saline || '-') + '</p>';
+    
+    // Allergen table - matching Word doc exactly
+    html += '<table class="allergen-table">';
+    html += '<tr><td class="header">Allergen</td><td class="header">Result</td><td class="header">Allergen</td><td class="header">Result</td><td class="header">Allergen</td><td class="header">Result</td></tr>';
+    html += '<tr><td>Beef (Extract)</td><td>' + (rec.BeefExtract || '-') + '</td><td>House Dust Mite</td><td>' + (rec.HouseDustMite || '-') + '</td><td>IV Penicillin</td><td>' + (rec.IVPenicillin || '-') + '</td></tr>';
+    html += '<tr><td>Pork (Extract)</td><td>' + (rec.PorkExtract || '-') + '</td><td>Storage Mite</td><td>' + (rec.StorageMite || '-') + '</td><td>Oral Penicillin</td><td>' + (rec.OralPenicillin || '-') + '</td></tr>';
+    html += '<tr><td>Beef (Raw)</td><td>' + (rec.BeefRaw || '-') + '</td><td>Cockroach</td><td>' + (rec.Cockroach || '-') + '</td><td>Amoxicillin</td><td>' + (rec.Amoxicillin || '-') + '</td></tr>';
+    html += '<tr><td>Pork (Raw)</td><td>' + (rec.PorkRaw || '-') + '</td><td>Cat epithelium</td><td>' + (rec.CatEpithelium || '-') + '</td><td>Co-amoxiclav</td><td>' + (rec.CoAmoxiclav || '-') + '</td></tr>';
+    html += '<tr><td>Milk</td><td>' + (rec.Milk || '-') + '</td><td>Dog epithelium</td><td>' + (rec.DogEpithelium || '-') + '</td><td>Cefalexin</td><td>' + (rec.Cefalexin || '-') + '</td></tr>';
+    html += '<tr><td>Gelatin</td><td>' + (rec.Gelatin || '-') + '</td><td>Mould Mix</td><td>' + (rec.MouldMix || '-') + '</td><td>Cefuroxime</td><td>' + (rec.Cefuroxime || '-') + '</td></tr>';
+    html += '<tr><td>Prawns</td><td>' + (rec.Prawns || '-') + '</td><td>Grass Pollens</td><td>' + (rec.GrassPollens || '-') + '</td><td>Cefotaxime/Ceftriaxone</td><td>' + (rec.CefotaximeCeftriaxone || '-') + '</td></tr>';
+    html += '<tr><td>Tuna</td><td>' + (rec.Tuna || '-') + '</td><td>Weed Pollens</td><td>' + (rec.WeedPollens || '-') + '</td><td>Meropenem</td><td>' + (rec.Meropenem || '-') + '</td></tr>';
+    html += '<tr><td>Salmon</td><td>' + (rec.Salmon || '-') + '</td><td>Aspergillus</td><td>' + (rec.Aspergillus || '-') + '</td><td>Omeprazole</td><td>' + (rec.Omeprazole || '-') + '</td></tr>';
+    html += '<tr><td>Eggs</td><td>' + (rec.Eggs || '-') + '</td><td>Wheat</td><td>' + (rec.Wheat || '-') + '</td><td>Infliximab/Adalimumab</td><td>' + (rec.InfliximabAdalimumab || '-') + '</td></tr>';
+    html += '<tr><td>Chicken</td><td>' + (rec.Chicken || '-') + '</td><td></td><td></td><td></td><td></td></tr>';
+    html += '</table>';
     
     html += '</body></html>';
     
     printWindow.document.write(html);
     printWindow.document.close();
 }
-
     // ── VIEW RECORD ──────────────────────────
     function viewRecord(rowId) {
         activeSelectedRecord = parsedRecords.find(function(r) { return r._rowId === rowId; });
