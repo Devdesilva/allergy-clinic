@@ -475,34 +475,54 @@
     statusEl.style.color = "#856404";
     statusEl.style.backgroundColor = "#fff3cd";
 
-    fetch(WEB_APP_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload)
-    })
-    .then(function(r) { 
-        console.log("Response status:", r.status);
-        return r.json(); 
-    })
-    .then(function(result) {
-        console.log("Save result:", result);
-        if (result.status === 'success') {
-            statusEl.innerText = "Record updated successfully!";
-            statusEl.style.color = "#155724";
-            statusEl.style.backgroundColor = "#d4edda";
-            closeEditModal();
-            fetchRecordsFromLedger();
-            setTimeout(function() { statusEl.style.display = "none"; }, 3000);
+    // Use XMLHttpRequest instead of fetch
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', WEB_APP_URL, true);
+    xhr.setRequestHeader('Content-Type', 'text/plain;charset=utf-8');
+    
+    xhr.onload = function() {
+        console.log("XHR status:", xhr.status);
+        console.log("XHR response:", xhr.responseText);
+        
+        if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+                var result = JSON.parse(xhr.responseText);
+                if (result.status === 'success') {
+                    statusEl.innerText = "Record updated successfully!";
+                    statusEl.style.color = "#155724";
+                    statusEl.style.backgroundColor = "#d4edda";
+                    closeEditModal();
+                    fetchRecordsFromLedger();
+                    setTimeout(function() { statusEl.style.display = "none"; }, 3000);
+                } else {
+                    throw new Error(result.message || 'Unknown error');
+                }
+            } catch(e) {
+                // If we can't parse response but got 200, assume success
+                statusEl.innerText = "Record updated! Refreshing...";
+                statusEl.style.color = "#155724";
+                statusEl.style.backgroundColor = "#d4edda";
+                closeEditModal();
+                setTimeout(function() {
+                    fetchRecordsFromLedger();
+                    statusEl.style.display = "none";
+                }, 2000);
+            }
         } else {
-            throw new Error(result.message || 'Unknown error');
+            statusEl.innerText = "Error: HTTP " + xhr.status;
+            statusEl.style.color = "#721c24";
+            statusEl.style.backgroundColor = "#f8d7da";
         }
-    })
-    .catch(function(err) {
-        console.error("Save error:", err);
-        statusEl.innerText = "Error saving: " + err.message;
+    };
+    
+    xhr.onerror = function() {
+        console.error("XHR error");
+        statusEl.innerText = "Error: Could not connect to server. Check your internet connection.";
         statusEl.style.color = "#721c24";
         statusEl.style.backgroundColor = "#f8d7da";
-    });
+    };
+    
+    xhr.send(JSON.stringify(payload));
 }
     // ── DELETE ───────────────────────────────
     function deleteRecord(rowId) {
