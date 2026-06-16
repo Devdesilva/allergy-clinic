@@ -166,6 +166,7 @@
             </div>
         </div>
         <div class="edit-banner">You are editing this record. Make changes below and click "Save All Changes".</div>
+        <div id="editStatusMsg" style="display:none; padding:12px; border-radius:4px; margin-bottom:12px; font-weight:bold; text-align:center;"></div>
         <div class="modal-body" id="editModalBody"></div>
     </div>
 </div>
@@ -570,77 +571,73 @@ if (item.Date) {
     };
     
     var elements = form.querySelectorAll('input, select, textarea');
-var checkboxGroups = {};
-elements.forEach(function(el) {
-    if (el.name) {
-        if (el.type === 'radio') {
-            if (el.checked) payload[el.name] = el.value;
-        } else if (el.type === 'checkbox') {
-            if (!checkboxGroups[el.name]) checkboxGroups[el.name] = [];
-            if (el.checked) checkboxGroups[el.name].push(el.value);
-        } else {
-            payload[el.name] = el.value;
+    var checkboxGroups = {};
+    elements.forEach(function(el) {
+        if (el.name) {
+            if (el.type === 'radio') {
+                if (el.checked) payload[el.name] = el.value;
+            } else if (el.type === 'checkbox') {
+                if (!checkboxGroups[el.name]) checkboxGroups[el.name] = [];
+                if (el.checked) checkboxGroups[el.name].push(el.value);
+            } else {
+                payload[el.name] = el.value;
+            }
         }
+    });
+    for (var key in checkboxGroups) {
+        payload[key] = checkboxGroups[key].join(', ');
     }
-});
-// Handle checkbox groups
-for (var key in checkboxGroups) {
-    payload[key] = checkboxGroups[key].join(', ');
-}
 
-    console.log("Saving payload:", JSON.stringify(payload));
+    // Show saving message in edit modal
+    var editMsg = document.getElementById('editStatusMsg');
+    editMsg.style.display = "block";
+    editMsg.style.backgroundColor = "#fff3cd";
+    editMsg.style.color = "#856404";
+    editMsg.innerText = "⏳ Saving changes...";
 
-    var statusEl = document.getElementById('statusDisplay');
-    statusEl.style.display = "block";
-    statusEl.innerText = "Saving changes...";
-    statusEl.style.color = "#856404";
-    statusEl.style.backgroundColor = "#fff3cd";
-
-    // Use XMLHttpRequest instead of fetch
     var xhr = new XMLHttpRequest();
     xhr.open('POST', WEB_APP_URL, true);
     xhr.setRequestHeader('Content-Type', 'text/plain;charset=utf-8');
     
     xhr.onload = function() {
-        console.log("XHR status:", xhr.status);
-        console.log("XHR response:", xhr.responseText);
-        
         if (xhr.status >= 200 && xhr.status < 300) {
             try {
                 var result = JSON.parse(xhr.responseText);
                 if (result.status === 'success') {
-                    statusEl.innerText = "Record updated successfully!";
-                    statusEl.style.color = "#155724";
-                    statusEl.style.backgroundColor = "#d4edda";
-                    closeEditModal();
-                    fetchRecordsFromLedger();
-                    setTimeout(function() { statusEl.style.display = "none"; }, 3000);
+                    editMsg.style.backgroundColor = "#d4edda";
+                    editMsg.style.color = "#155724";
+                    editMsg.innerText = "✅ Record updated successfully!";
+                    setTimeout(function() {
+                        closeEditModal();
+                        editMsg.style.display = "none";
+                        fetchRecordsFromLedger();
+                    }, 1500);
                 } else {
-                    throw new Error(result.message || 'Unknown error');
+                    editMsg.style.backgroundColor = "#f8d7da";
+                    editMsg.style.color = "#721c24";
+                    editMsg.innerText = "❌ " + (result.message || 'Error saving');
                 }
             } catch(e) {
-                // If we can't parse response but got 200, assume success
-                statusEl.innerText = "Record updated! Refreshing...";
-                statusEl.style.color = "#155724";
-                statusEl.style.backgroundColor = "#d4edda";
-                closeEditModal();
+                editMsg.style.backgroundColor = "#d4edda";
+                editMsg.style.color = "#155724";
+                editMsg.innerText = "✅ Record updated!";
                 setTimeout(function() {
+                    closeEditModal();
+                    editMsg.style.display = "none";
                     fetchRecordsFromLedger();
-                    statusEl.style.display = "none";
-                }, 2000);
+                }, 1500);
             }
         } else {
-            statusEl.innerText = "Error: HTTP " + xhr.status;
-            statusEl.style.color = "#721c24";
-            statusEl.style.backgroundColor = "#f8d7da";
+            editMsg.style.backgroundColor = "#f8d7da";
+            editMsg.style.color = "#721c24";
+            editMsg.innerText = "❌ Error: HTTP " + xhr.status;
         }
     };
     
     xhr.onerror = function() {
-        console.error("XHR error");
-        statusEl.innerText = "Error: Could not connect to server. Check your internet connection.";
-        statusEl.style.color = "#721c24";
-        statusEl.style.backgroundColor = "#f8d7da";
+        editMsg.style.backgroundColor = "#f8d7da";
+        editMsg.style.color = "#721c24";
+        editMsg.innerText = "❌ Connection error. Please try again.";
     };
     
     xhr.send(JSON.stringify(payload));
