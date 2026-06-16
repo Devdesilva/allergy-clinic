@@ -612,6 +612,27 @@ document.getElementById('modalWordDownload').addEventListener('click', function(
         });
     }
 
+    function makeCellWithBreaks(text, bold, width, colspan) {
+    if (bold === undefined) bold = false;
+    if (width === undefined) width = 50;
+    if (colspan === undefined) colspan = 1;
+    var lines = String(text || "-").split('\n');
+    var children = [];
+    lines.forEach(function(line, i) {
+        children.push(new TextRun({ text: line, bold: bold, size: 22 }));
+        if (i < lines.length - 1) {
+            children.push(new TextRun({ break: 1 }));
+        }
+    });
+    return new TableCell({
+        children: [new Paragraph({ children: children })],
+        width: { size: width, type: WidthType.PERCENTAGE },
+        columnSpan: colspan,
+        borders: { top: borderStyle, bottom: borderStyle, left: borderStyle, right: borderStyle },
+        margins: cellPadding
+    });
+}
+
     var dateStr = data.Date ? String(data.Date).split('T')[0] : '';
 
     const doc = new Document({
@@ -638,7 +659,7 @@ document.getElementById('modalWordDownload').addEventListener('click', function(
                     width: { size: 100, type: WidthType.PERCENTAGE },
                     rows: [
                         new TableRow({ children: [makeCell("Age of Onset (Years)", true, 25), makeCell(data.AgeOfOnset, false, 25), makeCell("Anaphylaxis Episodes", true, 25), makeCell(data.Anaphylaxis, false, 25)] }),
-                        new TableRow({ children: [makeCell("Presenting Complaint", true, 25), makeCell(data.PresentingComplaint, false, 75, 3)] }),
+                        new TableRow({ children: [makeCell("Presenting Complaint", true, 25), makeCellWithBreaks(data.PresentingComplaint, false, 75, 3)] }),
                         new TableRow({ children: [makeCell("Carries Epipen / Adrenaline", true, 25), makeCell(data.CarriesEpipen, false, 75, 3)] })
                     ]
                 }),
