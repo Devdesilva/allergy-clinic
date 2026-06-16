@@ -427,7 +427,7 @@ if (item.Date) {
         html += '<h3>Section 4: Assessment</h3>';
         html += '<div class="form-group"><label>Problem List</label><textarea name="ProblemList">' + escapeHTML(rec.ProblemList || '') + '</textarea></div>';
         html += '<div class="modal-grid">';
-        html += '<div class="form-group"><label>Probable Diagnosis</label><input type="text" name="ProbableDiagnosis" value="' + escapeHTML(rec.ProbableDiagnosis || '') + '"></div>';
+        html += '<div class="form-group"><label>Probable Diagnosis</label><textarea name="ProbableDiagnosis" rows="4">' + escapeHTML(rec.ProbableDiagnosis || '') + '</textarea></div>';
         html += '<div class="form-group"><label>Review Plan</label><input type="text" name="ReviewPlan" value="' + escapeHTML(rec.ReviewPlan || '') + '"></div>';
         html += '</div>';
         html += '<div class="form-group"><label>Investigations</label><textarea name="InvestigationsOrdered">' + escapeHTML(rec.InvestigationsOrdered || '') + '</textarea></div>';
@@ -703,7 +703,7 @@ document.getElementById('modalWordDownload').addEventListener('click', function(
                     width: { size: 100, type: WidthType.PERCENTAGE },
                     rows: [
                         new TableRow({ children: [makeCell("Problem List", true, 25), makeCell(data.ProblemList, false, 75, 3)] }),
-                        new TableRow({ children: [makeCell("Probable Diagnosis", true, 25), makeCell(data.ProbableDiagnosis, false, 25), makeCell("Review Plan", true, 25), makeCell(data.ReviewPlan, false, 25)] }),
+                        new TableRow({ children: [makeCell("Probable Diagnosis", true, 25), makeCellWithBreaks(data.ProbableDiagnosis, false, 25), makeCell("Review Plan", true, 25), makeCell(data.ReviewPlan, false, 25)] }),
                         new TableRow({ children: [makeCell("Investigations Ordered", true, 25), makeCell(data.InvestigationsOrdered, false, 75, 3)] }),
                         new TableRow({ children: [makeCell("Management Plan", true, 25), makeCell(data.ManagementPlan, false, 75, 3)] }),
                         new TableRow({ children: [makeCell("Prescription", true, 25), makeCell(data.Prescription, false, 75, 3)] })
