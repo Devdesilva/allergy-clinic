@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Allergy Clinic - Sign In</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #e9ecef;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            width: 350px;
+            text-align: center;
+        }
+        .login-box h1 {
+            color: #0056b3;
+            margin-bottom: 10px;
+            font-size: 22px;
+        }
+        .login-box p {
+            color: #6c757d;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #0056b3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:hover { background: #004494; }
+        .error {
+            color: #dc3545;
+            font-size: 13px;
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h1>🏥 Allergy Clinic</h1>
+        <p>Enter password to access records</p>
+        <input type="password" id="password" placeholder="Password" onkeypress="if(event.key==='Enter')checkPassword()">
+        <button onclick="checkPassword()">Sign In</button>
+        <div class="error" id="errorMsg">Incorrect password</div>
+    </div>
+
+    <script>
+      if (!sessionStorage.getItem('clinicAuth')) {
+    window.location.href = 'login.html';
+}
+      
+        // CHANGE THIS PASSWORD to whatever you want
+        const ACCESS_PASSWORD = "clinic12345";
+
+        function checkPassword() {
+            var password = document.getElementById('password').value;
+            if (password === ACCESS_PASSWORD) {
+                sessionStorage.setItem('clinicAuth', 'true');
+                window.location.href = 'admin.html';
+            } else {
+                document.getElementById('errorMsg').style.display = 'block';
+                document.getElementById('password').value = '';
+            }
+        }
+    </script>
+</body>
+</html>
