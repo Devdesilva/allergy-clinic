@@ -547,30 +547,116 @@
     }
 
     // ── WORD DOC DOWNLOAD ────────────────────
-    document.getElementById('modalWordDownload').addEventListener('click', function() {
-        if (!activeSelectedRecord) return;
-        var rec = activeSelectedRecord;
-        
-        var doc = new docx.Document({
-            sections: [{
-                children: [
-                    new docx.Paragraph({ text: "ALLERGY CLINIC - PATIENT RECORD", heading: docx.HeadingLevel.HEADING_1, alignment: "center" }),
-                    new docx.Paragraph({ text: "" }),
-                    new docx.Paragraph({ text: "Patient: " + (rec.Name || '') + " | Reg: " + (rec.RegNumber || '') + " | Date: " + (rec.Date ? String(rec.Date).split('T')[0] : '') }),
-                    new docx.Paragraph({ text: "Age: " + (rec.Age || '') + " | Gender: " + (rec.Gender || '') + " | Contact: " + (rec.ContactNumber || '') }),
-                    new docx.Paragraph({ text: "" }),
-                    new docx.Paragraph({ text: "Diagnosis: " + (rec.ProbableDiagnosis || '') }),
-                    new docx.Paragraph({ text: "Presenting Complaint: " + (rec.PresentingComplaint || '') }),
-                    new docx.Paragraph({ text: "Management Plan: " + (rec.ManagementPlan || '') }),
-                    new docx.Paragraph({ text: "Prescription: " + (rec.Prescription || '') })
-                ]
-            }]
-        });
+document.getElementById('modalWordDownload').addEventListener('click', function() {
+    if (!activeSelectedRecord) return;
+    var data = activeSelectedRecord;
 
-        docx.Packer.toBlob(doc).then(function(blob) {
-            saveAs(blob, 'Record_' + (rec.RegNumber || 'Patient') + '.docx');
+    const { Document, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, BorderStyle, HeadingLevel } = docx;
+
+    const borderStyle = { style: BorderStyle.SINGLE, size: 4, color: "DEE2E6" };
+    const cellPadding = { top: 100, bottom: 100, left: 150, right: 150 };
+
+    function makeCell(text, bold, width, colspan) {
+        if (bold === undefined) bold = false;
+        if (width === undefined) width = 50;
+        if (colspan === undefined) colspan = 1;
+        return new TableCell({
+            children: [new Paragraph({ children: [new TextRun({ text: String(text || "-"), bold: bold, size: 22 })] })],
+            width: { size: width, type: WidthType.PERCENTAGE },
+            columnSpan: colspan,
+            borders: { top: borderStyle, bottom: borderStyle, left: borderStyle, right: borderStyle },
+            margins: cellPadding
         });
+    }
+
+    var dateStr = data.Date ? String(data.Date).split('T')[0] : '';
+
+    const doc = new Document({
+        sections: [{
+            properties: {},
+            children: [
+                new Paragraph({ text: "ALLERGY CLINIC – PATIENT HISTORY RECORD", heading: HeadingLevel.HEADING_1, alignment: "center" }),
+                new Paragraph({ text: "\n" }),
+                
+                new Paragraph({ text: "1. Patient Demographics", heading: HeadingLevel.HEADING_2 }),
+                new Table({
+                    width: { size: 100, type: WidthType.PERCENTAGE },
+                    rows: [
+                        new TableRow({ children: [makeCell("Name", true, 25), makeCell(data.Name, false, 25), makeCell("Reg Number", true, 25), makeCell(data.RegNumber, false, 25)] }),
+                        new TableRow({ children: [makeCell("Age (Years) / Gender", true, 25), makeCell((data.Age || '') + 'Y / ' + (data.Gender || ''), false, 25), makeCell("Date", true, 25), makeCell(dateStr, false, 25)] }),
+                        new TableRow({ children: [makeCell("Contact Number", true, 25), makeCell(data.ContactNumber, false, 25), makeCell("Hometown", true, 25), makeCell(data.Hometown, false, 25)] }),
+                        new TableRow({ children: [makeCell("Occupation", true, 25), makeCell(data.Occupation, false, 25), makeCell("Referred By", true, 25), makeCell(data.ReferredBy, false, 25)] })
+                    ]
+                }),
+                new Paragraph({ text: "\n" }),
+
+                new Paragraph({ text: "2. Clinical Presentation", heading: HeadingLevel.HEADING_2 }),
+                new Table({
+                    width: { size: 100, type: WidthType.PERCENTAGE },
+                    rows: [
+                        new TableRow({ children: [makeCell("Age of Onset (Years)", true, 25), makeCell(data.AgeOfOnset, false, 25), makeCell("Anaphylaxis Episodes", true, 25), makeCell(data.Anaphylaxis, false, 25)] }),
+                        new TableRow({ children: [makeCell("Presenting Complaint", true, 25), makeCell(data.PresentingComplaint, false, 75, 3)] }),
+                        new TableRow({ children: [makeCell("Carries Epipen / Adrenaline", true, 25), makeCell(data.CarriesEpipen, false, 75, 3)] })
+                    ]
+                }),
+                new Paragraph({ text: "\n" }),
+
+                new Paragraph({ text: "3. Allergy & Medical History", heading: HeadingLevel.HEADING_2 }),
+                new Table({
+                    width: { size: 100, type: WidthType.PERCENTAGE },
+                    rows: [
+                        new TableRow({ children: [makeCell("General Allergic History", true, 25), makeCell(data.GeneralAllergicHistory, false, 75, 3)] }),
+                        new TableRow({ children: [makeCell("Drug Allergies", true, 25), makeCell(data.DrugAllergies, false, 25), makeCell("Food Allergies", true, 25), makeCell(data.FoodAllergies, false, 25)] }),
+                        new TableRow({ children: [makeCell("Tick Bites", true, 25), makeCell(data.TickBites, false, 75, 3)] }),
+                        new TableRow({ children: [makeCell("Past Medical History", true, 25), makeCell(data.PastMedicalHistory, false, 75, 3)] }),
+                        new TableRow({ children: [makeCell("Drug History", true, 25), makeCell(data.DrugHistory, false, 75, 3)] }),
+                        new TableRow({ children: [makeCell("Past Surgical History", true, 25), makeCell(data.PastSurgicalHistory, false, 75, 3)] }),
+                        new TableRow({ children: [makeCell("Family History", true, 25), makeCell(data.FamilyHistory, false, 75, 3)] })
+                    ]
+                }),
+                new Paragraph({ text: "\n" }),
+
+                new Paragraph({ text: "4. Assessment & Management", heading: HeadingLevel.HEADING_2 }),
+                new Table({
+                    width: { size: 100, type: WidthType.PERCENTAGE },
+                    rows: [
+                        new TableRow({ children: [makeCell("Problem List", true, 25), makeCell(data.ProblemList, false, 75, 3)] }),
+                        new TableRow({ children: [makeCell("Probable Diagnosis", true, 25), makeCell(data.ProbableDiagnosis, false, 25), makeCell("Review Plan", true, 25), makeCell(data.ReviewPlan, false, 25)] }),
+                        new TableRow({ children: [makeCell("Investigations Ordered", true, 25), makeCell(data.InvestigationsOrdered, false, 75, 3)] }),
+                        new TableRow({ children: [makeCell("Management Plan", true, 25), makeCell(data.ManagementPlan, false, 75, 3)] }),
+                        new TableRow({ children: [makeCell("Prescription", true, 25), makeCell(data.Prescription, false, 75, 3)] })
+                    ]
+                }),
+                new Paragraph({ text: "\n" }),
+
+                new Paragraph({ text: "5. Skin Prick Test Results", heading: HeadingLevel.HEADING_2 }),
+                new Paragraph({ text: "Positive Control (0.1% Histamine): " + (data.Histamine || "-") + "     Negative Control (N. Saline): " + (data.Saline || "-") + "\n\n" }),
+                
+                new Table({
+                    width: { size: 100, type: WidthType.PERCENTAGE },
+                    rows: [
+                        new TableRow({ children: [makeCell("Allergen", true, 20), makeCell("Result", true, 13), makeCell("Allergen", true, 20), makeCell("Result", true, 13), makeCell("Allergen", true, 20), makeCell("Result", true, 14)] }),
+                        new TableRow({ children: [makeCell("Beef (Extract)"), makeCell(data.BeefExtract), makeCell("House Dust Mite"), makeCell(data.HouseDustMite), makeCell("IV Penicillin"), makeCell(data.IVPenicillin)] }),
+                        new TableRow({ children: [makeCell("Pork (Extract)"), makeCell(data.PorkExtract), makeCell("Storage Mite"), makeCell(data.StorageMite), makeCell("Oral Penicillin"), makeCell(data.OralPenicillin)] }),
+                        new TableRow({ children: [makeCell("Beef (Raw)"), makeCell(data.BeefRaw), makeCell("Cockroach"), makeCell(data.Cockroach), makeCell("Amoxicillin"), makeCell(data.Amoxicillin)] }),
+                        new TableRow({ children: [makeCell("Pork (Raw)"), makeCell(data.PorkRaw), makeCell("Cat epithelium"), makeCell(data.CatEpithelium), makeCell("Co-amoxiclav"), makeCell(data.CoAmoxiclav)] }),
+                        new TableRow({ children: [makeCell("Milk"), makeCell(data.Milk), makeCell("Dog epithelium"), makeCell(data.DogEpithelium), makeCell("Cefalexin"), makeCell(data.Cefalexin)] }),
+                        new TableRow({ children: [makeCell("Gelatin"), makeCell(data.Gelatin), makeCell("Mould Mix"), makeCell(data.MouldMix), makeCell("Cefuroxime"), makeCell(data.Cefuroxime)] }),
+                        new TableRow({ children: [makeCell("Prawns"), makeCell(data.Prawns), makeCell("Grass Pollens"), makeCell(data.GrassPollens), makeCell("Cefotaxime/Ceftriaxone"), makeCell(data.CefotaximeCeftriaxone)] }),
+                        new TableRow({ children: [makeCell("Tuna"), makeCell(data.Tuna), makeCell("Weed Pollens"), makeCell(data.WeedPollens), makeCell("Meropenem"), makeCell(data.Meropenem)] }),
+                        new TableRow({ children: [makeCell("Salmon"), makeCell(data.Salmon), makeCell("Aspergillus"), makeCell(data.Aspergillus), makeCell("Omeprazole"), makeCell(data.Omeprazole)] }),
+                        new TableRow({ children: [makeCell("Eggs"), makeCell(data.Eggs), makeCell("Wheat"), makeCell(data.Wheat), makeCell("Infliximab/Adalimumab"), makeCell(data.InfliximabAdalimumab)] }),
+                        new TableRow({ children: [makeCell("Chicken"), makeCell(data.Chicken), makeCell(""), makeCell(""), makeCell(""), makeCell("")] })
+                    ]
+                })
+            ]
+        }]
     });
+
+    docx.Packer.toBlob(doc).then(function(blob) {
+        saveAs(blob, 'Allergy_Record_' + (data.RegNumber || 'Unknown') + '.docx');
+    });
+});
 
     // Close modals when clicking outside
     document.getElementById('recordModal').addEventListener('click', function(e) {
