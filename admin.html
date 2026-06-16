@@ -526,25 +526,57 @@
 }
     // ── DELETE ───────────────────────────────
     function deleteRecord(rowId) {
-        var rec = parsedRecords.find(function(r) { return r._rowId === rowId; });
-        if (!rec) return;
-        if (!confirm('Delete record for ' + (rec.Name || 'Unknown') + ' (Reg #' + rec.RegNumber + ')? This cannot be undone.')) return;
+    var rec = parsedRecords.find(function(r) { return r._rowId === rowId; });
+    if (!rec) return;
+    if (!confirm('Delete record for ' + (rec.Name || 'Unknown') + ' (Reg #' + rec.RegNumber + ')? This cannot be undone.')) return;
 
-        fetch(WEB_APP_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: "delete", RegNumber: String(rec.RegNumber) })
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(result) {
-            if (result.status === 'success') {
-                fetchRecordsFromLedger();
-            } else {
-                alert('Delete failed: ' + result.message);
+    var statusEl = document.getElementById('statusDisplay');
+    statusEl.style.display = "block";
+    statusEl.innerText = "Deleting record...";
+    statusEl.style.color = "#856404";
+    statusEl.style.backgroundColor = "#fff3cd";
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', WEB_APP_URL, true);
+    xhr.setRequestHeader('Content-Type', 'text/plain;charset=utf-8');
+    
+    xhr.onload = function() {
+        if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+                var result = JSON.parse(xhr.responseText);
+                if (result.status === 'success') {
+                    statusEl.innerText = "Record deleted successfully!";
+                    statusEl.style.color = "#155724";
+                    statusEl.style.backgroundColor = "#d4edda";
+                    fetchRecordsFromLedger();
+                    setTimeout(function() { statusEl.style.display = "none"; }, 3000);
+                } else {
+                    throw new Error(result.message || 'Unknown error');
+                }
+            } catch(e) {
+                statusEl.innerText = "Record deleted! Refreshing...";
+                statusEl.style.color = "#155724";
+                statusEl.style.backgroundColor = "#d4edda";
+                setTimeout(function() {
+                    fetchRecordsFromLedger();
+                    statusEl.style.display = "none";
+                }, 2000);
             }
-        })
-        .catch(function(err) { alert('Error: ' + err.message); });
-    }
+        } else {
+            statusEl.innerText = "Error: HTTP " + xhr.status;
+            statusEl.style.color = "#721c24";
+            statusEl.style.backgroundColor = "#f8d7da";
+        }
+    };
+    
+    xhr.onerror = function() {
+        statusEl.innerText = "Error: Could not connect to server.";
+        statusEl.style.color = "#721c24";
+        statusEl.style.backgroundColor = "#f8d7da";
+    };
+    
+    xhr.send(JSON.stringify({ action: "delete", RegNumber: String(rec.RegNumber) }));
+}
 
     // ── WORD DOC DOWNLOAD ────────────────────
 document.getElementById('modalWordDownload').addEventListener('click', function() {
