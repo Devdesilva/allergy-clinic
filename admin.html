@@ -467,8 +467,7 @@
         }
     });
 
-    console.log("Saving to URL:", WEB_APP_URL);
-    console.log("Payload:", JSON.stringify(payload));
+    console.log("Saving payload:", JSON.stringify(payload));
 
     var statusEl = document.getElementById('statusDisplay');
     statusEl.style.display = "block";
@@ -478,33 +477,33 @@
 
     fetch(WEB_APP_URL, {
         method: 'POST',
-        mode: 'no-cors',
-        cache: 'no-cache',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload)
     })
-    .then(function() {
-        // With no-cors, we can't read the response, so we assume success
-        console.log("Request sent (no-cors mode)");
-        statusEl.innerText = "Record updated successfully! Refreshing...";
-        statusEl.style.color = "#155724";
-        statusEl.style.backgroundColor = "#d4edda";
-        closeEditModal();
-        
-        // Wait a moment then refresh to get the updated data
-        setTimeout(function() {
+    .then(function(r) { 
+        console.log("Response status:", r.status);
+        return r.json(); 
+    })
+    .then(function(result) {
+        console.log("Save result:", result);
+        if (result.status === 'success') {
+            statusEl.innerText = "Record updated successfully!";
+            statusEl.style.color = "#155724";
+            statusEl.style.backgroundColor = "#d4edda";
+            closeEditModal();
             fetchRecordsFromLedger();
-            statusEl.style.display = "none";
-        }, 2000);
+            setTimeout(function() { statusEl.style.display = "none"; }, 3000);
+        } else {
+            throw new Error(result.message || 'Unknown error');
+        }
     })
     .catch(function(err) {
-        console.error("Fetch error:", err);
-        statusEl.innerText = "Error saving: " + err.message + ". Check console (F12) for details.";
+        console.error("Save error:", err);
+        statusEl.innerText = "Error saving: " + err.message;
         statusEl.style.color = "#721c24";
         statusEl.style.backgroundColor = "#f8d7da";
     });
 }
-
     // ── DELETE ───────────────────────────────
     function deleteRecord(rowId) {
         var rec = parsedRecords.find(function(r) { return r._rowId === rowId; });
