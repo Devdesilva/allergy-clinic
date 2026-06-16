@@ -584,7 +584,7 @@
 
 
 <script>
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxmKJMpHR2kv0Ko5R1rn0YP7x5VhNFPKCG1fMXMFlhkAlLJV177NWamBaaAYJ-cgdnIqg/exec";
+    const WEB_APP_URL = "YOUR_NEW_WEB_APP_URL_HERE";
 
     let globalRawData  = [];
     let parsedRecords  = [];
@@ -592,35 +592,65 @@
     let isEditMode     = false;
 
     /* ── LOAD ─────────────────────────────────────────────── */
-    window.onload = () => fetchRecordsFromLedger();
+    window.onload = () => {
+        console.log("Admin panel loaded, fetching records...");
+        fetchRecordsFromLedger();
+    };
 
     function fetchRecordsFromLedger() {
         showStatus("Loading records…", "");
+        console.log("Fetching from:", WEB_APP_URL);
+        
         fetch(WEB_APP_URL)
-        .then(r => r.json())
+        .then(r => {
+            console.log("Response status:", r.status);
+            if (!r.ok) throw new Error("HTTP error: " + r.status);
+            return r.json();
+        })
         .then(data => {
+            console.log("Data received:", data);
             hideStatus();
-            if (!data || data.length < 2) {
+            
+            if (!data || data.length === 0) {
                 showEmptyTable("No records found. Submit the first intake form to get started.");
                 updateStats(0, 0, 0);
+                globalRawData = [];
+                parsedRecords = [];
                 return;
             }
+            
+            if (data.length < 2) {
+                // Has headers but no data rows
+                showEmptyTable("No records found. Submit the first intake form to get started.");
+                updateStats(0, 0, 0);
+                globalRawData = data;
+                parsedRecords = [];
+                return;
+            }
+            
             globalRawData = data;
             const headers = data[0];
+            console.log("Headers:", headers);
+            
             parsedRecords = data.slice(1).map((row, i) => {
                 const obj = {
-                    rowId: i,
-                    rowNumber: i + 2};
-                  };
-                headers.forEach((h, j) => obj[h] = row[j] !== undefined ? row[j] : '';
+                    _rowId: i,
+                    rowNumber: i + 2
+                };
+                headers.forEach((h, j) => {
+                    obj[h] = row[j] !== undefined ? row[j] : '';
+                });
                 return obj;
             });
+            
+            console.log("Parsed records:", parsedRecords.length);
             renderRegistryRows(parsedRecords);
             updateStats(parsedRecords.length, countThisMonth(parsedRecords), parsedRecords.length);
         })
         .catch(err => {
-            console.error(err);
-            showStatus("Could not connect to Google Sheets. Check your network.", "error");
+            console.error("Fetch error:", err);
+            showStatus("Could not connect to Google Sheets. Check your network and Web App URL.", "error");
+            showEmptyTable("Error loading records. Please check the console (F12) for details.");
         });
     }
 
@@ -634,45 +664,60 @@
     }
 
     function updateStats(total, month, showing) {
-        document.getElementById('statTotal').textContent   = total;
-        document.getElementById('statMonth').textContent   = month;
-        document.getElementById('statShowing').textContent = showing;
+        document.getElementById('statTotal').textContent   = total || 0;
+        document.getElementById('statMonth').textContent   = month || 0;
+        document.getElementById('statShowing').textContent = showing || 0;
     }
 
     /* ── RENDER TABLE ─────────────────────────────────────── */
     function renderRegistryRows(list) {
         const tbody = document.getElementById('registryBody');
+        if (!tbody) {
+            console.error("registryBody not found!");
+            return;
+        }
         tbody.innerHTML = "";
         document.getElementById('statShowing').textContent = list.length;
 
-        if (list.length === 0) {
+        if (!list || list.length === 0) {
             showEmptyTable("No records match your search.");
             return;
         }
 
-        list.forEach(item => {
+        list.forEach((item, index) => {
             const tr = document.createElement('tr');
             const dateVal = item.Date ? String(item.Date).split('T')[0] : 'N/A';
+            const name = item.Name || 'Unknown';
+            const regNum = item.RegNumber || '—';
+            const diagnosis = item.ProbableDiagnosis || 'Pending';
+            
             tr.innerHTML = `
                 <td class="date-cell">${dateVal}</td>
                 <td>
-                    <div class="patient-name">${item.Name || 'Unknown'}</div>
+                    <div class="patient-name">${escapeHTML(name)}</div>
                 </td>
-                <td class="patient-reg">${item.RegNumber || '—'}</td>
-                <td><span class="badge">${item.ProbableDiagnosis || 'Pending'}</span></td>
+                <td class="patient-reg">${escapeHTML(regNum)}</td>
+                <td><span class="badge">${escapeHTML(diagnosis)}</span></td>
                 <td>
                     <div class="action-cell">
                         <button class="btn btn-primary btn-sm" onclick="viewRecordDetails(${item._rowId})">View</button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteRecordFromDatabase('${item.RegNumber}', '${(item.Name||'').replace(/'/g,"\\'")}')">Delete</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteRecordFromDatabase('${escapeHTML(regNum)}', '${escapeHTML(name)}')">Delete</button>
                     </div>
                 </td>`;
             tbody.appendChild(tr);
         });
     }
 
+    function escapeHTML(str) {
+        if (!str) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
     function showEmptyTable(msg) {
-        document.getElementById('registryBody').innerHTML =
-            `<tr><td colspan="5"><div class="empty-state"><p>${msg}</p></div></td></tr>`;
+        const tbody = document.getElementById('registryBody');
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><p>${msg}</p></div></td></tr>`;
+        }
     }
 
     /* ── FILTER / SEARCH ──────────────────────────────────── */
@@ -695,9 +740,12 @@
 
     /* ── EXCEL EXPORT ─────────────────────────────────────── */
     function exportToExcel() {
-        if (!parsedRecords.length) { alert("No records to export."); return; }
+        if (!parsedRecords || !parsedRecords.length) { 
+            alert("No records to export."); 
+            return; 
+        }
         const headers = globalRawData[0];
-        const rows = [headers, ...parsedRecords.map(r => headers.map(h => r[h] ?? ''))];
+        const rows = [headers, ...parsedRecords.map(r => headers.map(h => r[h] !== undefined ? r[h] : ''))];
         const ws = XLSX.utils.aoa_to_sheet(rows);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Patients");
@@ -707,13 +755,14 @@
     /* ── STATUS HELPERS ───────────────────────────────────── */
     function showStatus(msg, type) {
         const el = document.getElementById('statusDisplay');
+        if (!el) return;
         el.textContent = msg;
         el.className = type || '';
         el.style.display = 'block';
     }
     function hideStatus() {
         const el = document.getElementById('statusDisplay');
-        el.style.display = 'none';
+        if (el) el.style.display = 'none';
     }
 
     /* ── DELETE ───────────────────────────────────────────── */
@@ -730,7 +779,7 @@
         })
         .then(r => r.json())
         .then(result => {
-            if (result.status !== 'success') throw new Error(result.message);
+            if (result.status !== 'success') throw new Error(result.message || 'Unknown error');
             showStatus(`✅ Record for ${name} deleted.`, "success");
             setTimeout(() => { hideStatus(); fetchRecordsFromLedger(); }, 1800);
         })
@@ -742,7 +791,10 @@
     /* ── VIEW / DISPLAY MODAL ─────────────────────────────── */
     function viewRecordDetails(rowId) {
         activeSelectedRecord = parsedRecords.find(r => r._rowId === rowId);
-        if (!activeSelectedRecord) return;
+        if (!activeSelectedRecord) {
+            console.error("Record not found for rowId:", rowId);
+            return;
+        }
         isEditMode = false;
         openModal();
     }
@@ -766,6 +818,7 @@
 
     function renderModalContent() {
         const rec = activeSelectedRecord;
+        if (!rec) return;
 
         // Header title
         document.getElementById('modalPatientTitle').childNodes[0].textContent =
@@ -795,33 +848,45 @@
         document.getElementById('modalDataBody').innerHTML = buildModalHTML();
     }
 
-    function enterEditMode() { isEditMode = true;  renderModalContent(); }
-    function cancelEdit()    { isEditMode = false; renderModalContent(); }
+    function enterEditMode() { 
+        isEditMode = true;  
+        renderModalContent(); 
+    }
+    
+    function cancelEdit() { 
+        isEditMode = false; 
+        renderModalContent(); 
+    }
 
     /* ── FIELD RENDERERS ──────────────────────────────────── */
     function f(key, type = 'text', readOnly = false) {
+        if (!activeSelectedRecord) return '';
         let val = activeSelectedRecord[key] || '';
         if (type === 'date' && String(val).includes('T')) val = val.split('T')[0];
         if (!isEditMode || readOnly) {
-            return `<div class="field-val">${val || '—'}</div>`;
+            return `<div class="field-val">${escapeHTML(String(val)) || '—'}</div>`;
         }
-        return `<input type="${type}" name="${key}" value="${String(val).replace(/"/g,'&quot;')}">`;
+        return `<input type="${type}" name="${key}" value="${escapeHTML(String(val))}">`;
     }
 
     function ta(key) {
+        if (!activeSelectedRecord) return '';
         const val = activeSelectedRecord[key] || '';
-        if (!isEditMode) return `<div class="field-val">${val || '—'}</div>`;
-        return `<textarea name="${key}">${val}</textarea>`;
+        if (!isEditMode) return `<div class="field-val">${escapeHTML(String(val)) || '—'}</div>`;
+        return `<textarea name="${key}">${escapeHTML(String(val))}</textarea>`;
     }
 
     function sptField(key) {
+        if (!activeSelectedRecord) return '';
         const val = activeSelectedRecord[key] || '';
-        if (!isEditMode) return `<span class="spt-val">${val || '—'}</span>`;
-        return `<input type="text" name="${key}" value="${val}">`;
+        if (!isEditMode) return `<span class="spt-val">${escapeHTML(String(val)) || '—'}</span>`;
+        return `<input type="text" name="${key}" value="${escapeHTML(String(val))}">`;
     }
 
     /* ── BUILD MODAL HTML ─────────────────────────────────── */
     function buildModalHTML() {
+        if (!activeSelectedRecord) return '<p>No record selected.</p>';
+        
         return `
         <!-- Section 1 -->
         <div class="section-block">
@@ -1018,85 +1083,88 @@
     }
 
     function sptRow(label, key) {
+        if (!activeSelectedRecord) return '';
         const val = activeSelectedRecord[key] || '';
         if (!isEditMode) {
-            return `<div class="spt-row"><span class="spt-name">${label}</span><span class="spt-val">${val || '—'}</span></div>`;
+            return `<div class="spt-row"><span class="spt-name">${label}</span><span class="spt-val">${escapeHTML(String(val)) || '—'}</span></div>`;
         }
-        return `<div class="spt-row"><span class="spt-name">${label}</span><input type="text" name="${key}" value="${val}"></div>`;
+        return `<div class="spt-row"><span class="spt-name">${label}</span><input type="text" name="${key}" value="${escapeHTML(String(val))}"></div>`;
     }
 
     /* ── SAVE EDITS ───────────────────────────────────────── */
     function submitRecordEditsToCloud() {
-    if (!activeSelectedRecord) return;
+        if (!activeSelectedRecord) return;
 
-    const btnGroup = document.getElementById('modalBtnGroup');
-    btnGroup.innerHTML = `<span style="color:#94a3b8; font-size:14px; font-weight:600;">⏳ Saving…</span>`;
+        const btnGroup = document.getElementById('modalBtnGroup');
+        btnGroup.innerHTML = `<span style="color:#94a3b8; font-size:14px; font-weight:600;">⏳ Saving…</span>`;
 
-    const form = document.getElementById('editPatientForm');
-    const formData = new FormData(form);
-    const payload = { 
-        action: "update", 
-        rowNumber: activeSelectedRecord.rowNumber 
-    };
-    
-    // Build payload with all fields
-    for (let [key, val] of formData.entries()) {
-        payload[key] = val;
-    }
-    
-    // Also include any fields that might not be in the form (readonly fields in non-edit mode)
-    // Get all input/textarea elements including those that might be divs
-    const allFields = form.querySelectorAll('input, textarea, select');
-    allFields.forEach(field => {
-        if (field.name && !payload.hasOwnProperty(field.name)) {
-            payload[field.name] = field.value;
-        }
-    });
-
-    fetch(WEB_APP_URL, {
-        method: 'POST',
-        cache: 'no-cache',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify(payload)
-    })
-    .then(r => r.json())
-    .then(result => {
-        if (result.status !== 'success') throw new Error(result.message || 'Unknown error');
-
-        // Update local memory with all form values
-        for (let [key, val] of formData.entries()) {
-            activeSelectedRecord[key] = val;
-        }
+        const form = document.getElementById('editPatientForm');
+        const formElements = form.querySelectorAll('input, textarea, select');
+        const payload = { 
+            action: "update", 
+            rowNumber: activeSelectedRecord.rowNumber 
+        };
         
-        // Also update the record in parsedRecords array
-        const idx = parsedRecords.findIndex(r => r._rowId === activeSelectedRecord._rowId);
-        if (idx !== -1) {
-            for (let [key, val] of formData.entries()) {
-                parsedRecords[idx][key] = val;
+        // Collect all form values
+        formElements.forEach(field => {
+            if (field.name) {
+                payload[field.name] = field.value;
             }
-        }
+        });
 
-        isEditMode = false;
-        renderModalContent();
-        renderRegistryRows(parsedRecords); // Refresh the table immediately
+        console.log("Saving payload:", payload);
 
-        showStatus('✅ Record updated successfully.', 'success');
-        setTimeout(() => { 
-            hideStatus(); 
-            fetchRecordsFromLedger(); // Full refresh from server
-        }, 2200);
-    })
-    .catch(err => {
-        alert('❌ Failed to save: ' + err.message);
-        isEditMode = true;
-        renderModalContent();
-    });
-}
+        fetch(WEB_APP_URL, {
+            method: 'POST',
+            cache: 'no-cache',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify(payload)
+        })
+        .then(r => r.json())
+        .then(result => {
+            console.log("Save result:", result);
+            if (result.status !== 'success') throw new Error(result.message || 'Unknown error');
+
+            // Update local memory
+            formElements.forEach(field => {
+                if (field.name) {
+                    activeSelectedRecord[field.name] = field.value;
+                }
+            });
+            
+            // Update in parsedRecords array
+            const idx = parsedRecords.findIndex(r => r._rowId === activeSelectedRecord._rowId);
+            if (idx !== -1) {
+                formElements.forEach(field => {
+                    if (field.name) {
+                        parsedRecords[idx][field.name] = field.value;
+                    }
+                });
+            }
+
+            isEditMode = false;
+            renderModalContent();
+            renderRegistryRows(parsedRecords);
+
+            showStatus('✅ Record updated successfully.', 'success');
+            setTimeout(() => { 
+                hideStatus(); 
+                fetchRecordsFromLedger();
+            }, 2200);
+        })
+        .catch(err => {
+            console.error("Save error:", err);
+            alert('❌ Failed to save: ' + err.message);
+            isEditMode = true;
+            renderModalContent();
+        });
+    }
 
     /* ── WORD DOC DOWNLOAD ────────────────────────────────── */
     function downloadWordDoc() {
         const rec = activeSelectedRecord;
         if (!rec) return;
+        
         const { Document, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, BorderStyle, HeadingLevel } = docx;
         const bs = { style: BorderStyle.SINGLE, size: 4, color: "DEE2E6" };
         const cp = { top: 100, bottom: 100, left: 150, right: 150 };
