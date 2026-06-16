@@ -325,6 +325,7 @@ if (item.Date) {
         html += '</div>';
         html += '<p><strong>Presenting Complaint:</strong><br>' + (rec.PresentingComplaint || '-') + '</p>';
         html += '<p><strong>Investigations Done:</strong><br>' + (rec.InvestigationsDone || '-') + '</p>';
+        html += '<p><strong>Investigations Done:</strong><br>' + (rec.InvestigationsDone || '-') + '</p>';
 
         html += '<h3>Section 3: Allergy & Medical History</h3>';
         html += '<p><strong>General Allergic History:</strong> ' + (rec.GeneralAllergicHistory || '-') + '</p>';
@@ -403,6 +404,7 @@ if (item.Date) {
         html += '<div class="form-group"><label>Carries Epipen</label><div class="radio-group"><label><input type="radio" name="CarriesEpipen" value="Yes" ' + (rec.CarriesEpipen==='Yes'?'checked':'') + '> Yes</label><label><input type="radio" name="CarriesEpipen" value="No" ' + (rec.CarriesEpipen==='No'?'checked':'') + '> No</label></div></div>';
         html += '</div>';
         html += '<div class="form-group"><label>Presenting Complaint</label><textarea name="PresentingComplaint">' + escapeHTML(rec.PresentingComplaint || '') + '</textarea></div>';
+        html += '<div class="form-group"><label>Investigations Done</label><textarea name="InvestigationsDone">' + escapeHTML(rec.InvestigationsDone || '') + '</textarea></div>';
         html += '<div class="form-group"><label>Investigations Done</label><textarea name="InvestigationsDone">' + escapeHTML(rec.InvestigationsDone || '') + '</textarea></div>';
 
         html += '<h3>Section 3: Allergy & Medical History</h3>';
@@ -662,6 +664,7 @@ document.getElementById('modalWordDownload').addEventListener('click', function(
                     rows: [
                         new TableRow({ children: [makeCell("Age of Onset (Years)", true, 25), makeCell(data.AgeOfOnset, false, 25), makeCell("Anaphylaxis Episodes", true, 25), makeCell(data.Anaphylaxis, false, 25)] }),
                         new TableRow({ children: [makeCell("Presenting Complaint", true, 25), makeCellWithBreaks(data.PresentingComplaint, false, 75, 3)] }),
+                        new TableRow({ children: [makeCell("Investigations Done", true, 25), makeCellWithBreaks(data.InvestigationsDone, false, 75, 3)] }),
                         new TableRow({ children: [makeCell("Investigations Done", true, 25), makeCellWithBreaks(data.InvestigationsDone, false, 75, 3)] }),
                         new TableRow({ children: [makeCell("Carries Epipen / Adrenaline", true, 25), makeCell(data.CarriesEpipen, false, 75, 3)] })
                     ]
