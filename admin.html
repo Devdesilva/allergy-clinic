@@ -3,1243 +3,577 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Allergy Clinic — Patient Records</title>
+    <title>Allergy Clinic - Admin Records Registry</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://unpkg.com/docx@7.3.0/build/index.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
-        /* ── TOKENS ───────────────────────────────────────────── */
         :root {
-            --navy:    #0a2540;
-            --blue:    #1a6fdb;
-            --blue-lt: #e8f1fc;
-            --teal:    #0d9488;
-            --teal-lt: #e6f7f5;
-            --red:     #dc2626;
-            --red-lt:  #fef2f2;
-            --amber:   #d97706;
-            --green:   #16a34a;
-            --green-lt:#f0fdf4;
-            --grey-50: #f8fafc;
-            --grey-100:#f1f5f9;
-            --grey-200:#e2e8f0;
-            --grey-400:#94a3b8;
-            --grey-600:#475569;
-            --grey-800:#1e293b;
-            --white:   #ffffff;
-            --radius:  10px;
-            --shadow:  0 4px 24px rgba(10,37,64,.10);
-            --shadow-sm: 0 2px 8px rgba(10,37,64,.07);
+            --primary: #0056b3;
+            --secondary: #17a2b8;
+            --dark: #212529;
+            --light: #f8f9fa;
+            --border: #dee2e6;
+            --success: #28a745;
         }
-
-        /* ── RESET & BASE ─────────────────────────────────────── */
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            font-size: 15px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
-            color: var(--grey-800);
-            background: var(--grey-100);
-            min-height: 100vh;
+            color: var(--dark);
+            background-color: #e9ecef;
+            margin: 0;
+            padding: 20px;
         }
-
-        /* ── TOP NAV BAR ──────────────────────────────────────── */
-        .topbar {
-            background: var(--navy);
-            color: white;
-            padding: 0 24px;
-            height: 58px;
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .header-main {
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 2px 12px rgba(0,0,0,.2);
-        }
-        .topbar-brand {
-            display: flex;
             align-items: center;
-            gap: 12px;
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
         }
-        .topbar-icon {
-            width: 34px; height: 34px;
-            background: var(--blue);
-            border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 18px;
+        .header-main h1 {
+            color: var(--primary);
+            margin: 0;
+            font-size: 26px;
+            text-transform: uppercase;
         }
-        .topbar-brand h1 {
-            font-size: 17px;
-            font-weight: 600;
-            letter-spacing: .01em;
-        }
-        .topbar-brand span {
-            font-size: 12px;
-            color: var(--grey-400);
-            font-weight: 400;
-        }
-        .topbar-nav a {
-            color: var(--grey-400);
+        .nav-link {
+            color: var(--primary);
             text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            padding: 6px 14px;
-            border-radius: 6px;
-            transition: background .15s, color .15s;
+            font-weight: bold;
         }
-        .topbar-nav a:hover {
-            background: rgba(255,255,255,.1);
-            color: white;
-        }
-
-        /* ── PAGE WRAPPER ─────────────────────────────────────── */
-        .page { max-width: 1100px; margin: 0 auto; padding: 28px 20px 60px; }
-
-        /* ── STATS ROW ────────────────────────────────────────── */
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 14px;
-            margin-bottom: 24px;
-        }
-        .stat-card {
-            background: var(--white);
-            border-radius: var(--radius);
-            padding: 18px 20px;
-            box-shadow: var(--shadow-sm);
-            border-left: 4px solid var(--blue);
-        }
-        .stat-card.green  { border-color: var(--teal); }
-        .stat-card.amber  { border-color: var(--amber); }
-        .stat-label { font-size: 12px; color: var(--grey-600); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
-        .stat-value { font-size: 28px; font-weight: 700; color: var(--navy); margin-top: 2px; }
-
-        /* ── TOOLBAR ──────────────────────────────────────────── */
-        .toolbar {
-            background: var(--white);
-            border-radius: var(--radius);
-            padding: 16px 20px;
-            box-shadow: var(--shadow-sm);
-            margin-bottom: 16px;
+        .nav-link:hover { text-decoration: underline; }
+        .controls-row {
             display: flex;
-            gap: 12px;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
-            align-items: center;
         }
-        .search-wrap {
-            position: relative;
-            flex: 1;
-            min-width: 180px;
+        .search-box {
+            display: flex;
+            gap: 10px;
+            flex-grow: 1;
+            max-width: 600px;
         }
-        .search-wrap svg {
-            position: absolute;
-            left: 11px; top: 50%;
-            transform: translateY(-50%);
-            color: var(--grey-400);
-            pointer-events: none;
-        }
-        .search-wrap input {
+        input[type="text"], input[type="date"] {
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 15px;
             width: 100%;
-            padding: 9px 12px 9px 36px;
-            border: 1.5px solid var(--grey-200);
-            border-radius: 8px;
-            font-size: 14px;
-            outline: none;
-            transition: border-color .15s;
-            background: var(--grey-50);
         }
-        .search-wrap input:focus { border-color: var(--blue); background: white; }
-        input[type="date"] {
-            padding: 9px 12px;
-            border: 1.5px solid var(--grey-200);
-            border-radius: 8px;
-            font-size: 14px;
-            outline: none;
-            background: var(--grey-50);
-            color: var(--grey-800);
-            transition: border-color .15s;
-        }
-        input[type="date"]:focus { border-color: var(--blue); background: white; }
-
-        /* ── BUTTONS ──────────────────────────────────────────── */
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            padding: 9px 18px;
-            font-size: 14px;
-            font-weight: 600;
+        button {
+            padding: 10px 20px;
+            font-size: 15px;
+            font-weight: bold;
             border: none;
-            border-radius: 8px;
+            border-radius: 4px;
             cursor: pointer;
             white-space: nowrap;
-            transition: opacity .15s, transform .1s;
-            text-decoration: none;
         }
-        .btn:active { transform: scale(.97); }
-        .btn-primary   { background: var(--blue);  color: white; }
-        .btn-primary:hover { opacity: .88; }
-        .btn-success   { background: var(--green); color: white; }
-        .btn-success:hover { opacity: .88; }
-        .btn-danger    { background: var(--red);   color: white; }
-        .btn-danger:hover { opacity: .88; }
-        .btn-ghost     { background: var(--grey-100); color: var(--grey-600); border: 1.5px solid var(--grey-200); }
-        .btn-ghost:hover { background: var(--grey-200); }
-        .btn-teal      { background: var(--teal);  color: white; }
-        .btn-teal:hover { opacity: .88; }
-        .btn-sm { padding: 6px 12px; font-size: 13px; border-radius: 6px; }
-
-        /* ── STATUS TOAST ─────────────────────────────────────── */
-        #statusDisplay {
-            display: none;
-            background: var(--blue-lt);
-            color: var(--blue);
-            border: 1px solid #b6d4f9;
-            border-radius: 8px;
-            padding: 12px 18px;
-            font-weight: 600;
-            font-size: 14px;
-            margin-bottom: 16px;
-            text-align: center;
+        .btn-excel { background-color: var(--success); color: white; }
+        .btn-action { background-color: var(--primary); color: white; padding: 6px 12px; font-size: 13px; }
+        .btn-close { background-color: #6c757d; color: white; }
+        /* Table Styling */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            border-radius: 4px;
         }
-        #statusDisplay.success { background: var(--green-lt); color: var(--green); border-color: #bbf7d0; }
-        #statusDisplay.error   { background: var(--red-lt);   color: var(--red);   border-color: #fecaca; }
-
-        /* ── RECORDS TABLE ────────────────────────────────────── */
-        .card {
-            background: var(--white);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow-sm);
-            overflow: hidden;
-        }
-        .card-header {
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--grey-200);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        .card-header h2 {
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--navy);
-        }
-        .table-wrap { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        thead th {
-            background: var(--grey-50);
-            color: var(--grey-600);
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: .06em;
-            padding: 12px 16px;
+        table {
+            width: 100%;
+            border-collapse: collapse;
             text-align: left;
-            border-bottom: 1px solid var(--grey-200);
-            white-space: nowrap;
+            font-size: 15px;
         }
-        tbody tr { border-bottom: 1px solid var(--grey-100); transition: background .1s; }
-        tbody tr:last-child { border-bottom: none; }
-        tbody tr:hover { background: var(--grey-50); }
-        tbody td { padding: 13px 16px; vertical-align: middle; }
-        .patient-name { font-weight: 600; color: var(--navy); }
-        .patient-reg  { font-size: 13px; color: var(--grey-600); font-family: monospace; }
-        .badge {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 99px;
-            font-size: 12px;
+        th, td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        th {
+            background-color: var(--light);
+            color: var(--primary);
             font-weight: 600;
-            background: var(--teal-lt);
-            color: var(--teal);
         }
-        .date-cell { color: var(--grey-600); font-size: 13px; white-space: nowrap; }
-        .action-cell { display: flex; gap: 8px; flex-wrap: wrap; }
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--grey-400);
-        }
-        .empty-state svg { margin-bottom: 12px; opacity: .4; }
-        .empty-state p { font-size: 15px; }
-
-        /* ── MODAL ────────────────────────────────────────────── */
-        .modal-overlay {
+        tr:hover { background-color: #f1f3f5; }
+        /* Modal Overlay Styling */
+        .modal {
             display: none;
             position: fixed;
-            inset: 0;
-            background: rgba(10,37,64,.45);
-            z-index: 500;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
             overflow-y: auto;
-            padding: 24px 12px;
+            padding: 40px 10px;
+            box-sizing: border-box;
         }
-        .modal-box {
+        .modal-content {
             background: white;
-            max-width: 860px;
+            max-width: 900px;
             margin: 0 auto;
-            border-radius: 14px;
-            box-shadow: 0 20px 60px rgba(10,37,64,.2);
-            overflow: hidden;
-        }
-
-        /* modal top bar */
-        .modal-topbar {
-            background: var(--navy);
-            padding: 18px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        .modal-topbar h2 {
-            color: white;
-            font-size: 17px;
-            font-weight: 600;
-            flex: 1;
-            min-width: 0;
-        }
-        .modal-topbar h2 span {
-            color: var(--grey-400);
-            font-weight: 400;
-            font-size: 14px;
-            display: block;
-            margin-top: 1px;
-        }
-        /* button group in modal header — wraps neatly on mobile */
-        .modal-btn-group {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        /* modal body */
-        .modal-body { padding: 24px; }
-        .section-block {
-            margin-bottom: 28px;
-        }
-        .section-title {
-            font-size: 13px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: .08em;
-            color: var(--teal);
-            border-bottom: 2px solid var(--teal-lt);
-            padding-bottom: 6px;
-            margin-bottom: 16px;
-        }
-        .field-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 14px 24px;
-        }
-        .field-item label {
-            display: block;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: .07em;
-            color: var(--grey-400);
-            margin-bottom: 4px;
-        }
-        .field-item .field-val {
-            font-size: 14px;
-            color: var(--grey-800);
-            font-weight: 500;
-            min-height: 22px;
-        }
-        .field-item input[type="text"],
-        .field-item input[type="number"],
-        .field-item input[type="date"] {
-            width: 100%;
-            padding: 8px 10px;
-            border: 1.5px solid var(--grey-200);
-            border-radius: 7px;
-            font-size: 14px;
-            font-family: inherit;
-            color: var(--grey-800);
-            background: var(--grey-50);
-            outline: none;
-            transition: border-color .15s;
-        }
-        .field-item input:focus { border-color: var(--blue); background: white; }
-        .field-full { grid-column: 1 / -1; }
-        .field-full textarea {
-            width: 100%;
-            padding: 8px 10px;
-            border: 1.5px solid var(--grey-200);
-            border-radius: 7px;
-            font-size: 14px;
-            font-family: inherit;
-            color: var(--grey-800);
-            background: var(--grey-50);
-            resize: vertical;
-            min-height: 72px;
-            outline: none;
-            transition: border-color .15s;
-        }
-        .field-full textarea:focus { border-color: var(--blue); background: white; }
-        .field-full .field-val {
-            white-space: pre-wrap;
-            line-height: 1.7;
-        }
-        .readonly-tag {
-            font-size: 11px;
-            background: var(--grey-100);
-            color: var(--grey-600);
-            border-radius: 4px;
-            padding: 1px 6px;
-            margin-left: 6px;
-            vertical-align: middle;
-        }
-
-        /* skin prick test grid */
-        .spt-controls {
-            display: flex;
-            gap: 24px;
-            margin-bottom: 16px;
-            flex-wrap: wrap;
-        }
-        .spt-table-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 16px;
-        }
-        .spt-group {
-            background: var(--grey-50);
-            border: 1px solid var(--grey-200);
+            padding: 30px;
             border-radius: 8px;
-            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            position: relative;
         }
-        .spt-group-header {
-            background: var(--navy);
-            color: white;
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: .06em;
-            text-transform: uppercase;
-            padding: 8px 12px;
-        }
-        .spt-row {
+        .modal-header {
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            padding: 6px 12px;
-            border-bottom: 1px solid var(--grey-200);
-            gap: 10px;
-            font-size: 13px;
-        }
-        .spt-row:last-child { border-bottom: none; }
-        .spt-row:nth-child(even) { background: white; }
-        .spt-name { color: var(--grey-600); flex: 1; }
-        .spt-val  { font-weight: 600; color: var(--navy); min-width: 40px; text-align: right; }
-        .spt-row input {
-            width: 70px;
-            padding: 4px 8px;
-            border: 1.5px solid var(--grey-200);
-            border-radius: 5px;
-            font-size: 13px;
-            text-align: center;
-            font-family: inherit;
-            background: white;
-            outline: none;
-        }
-        .spt-row input:focus { border-color: var(--blue); }
-
-        /* edit mode banner */
-        .edit-banner {
-            display: none;
-            background: #fffbeb;
-            border: 1px solid #fcd34d;
-            border-radius: 8px;
-            padding: 10px 16px;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--amber);
+            align-items: center;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 10px;
             margin-bottom: 20px;
         }
-        .edit-banner.visible { display: block; }
-
-        /* ── RESPONSIVE ───────────────────────────────────────── */
-        @media (max-width: 640px) {
-            .topbar-brand h1 { font-size: 15px; }
-            .topbar-brand span { display: none; }
-            .page { padding: 16px 12px 40px; }
-            .stats-row { grid-template-columns: repeat(2, 1fr); }
-            .toolbar { gap: 8px; }
-            .modal-box { border-radius: 10px; }
-            .modal-topbar { padding: 14px 16px; }
-            .modal-body { padding: 16px; }
-            .field-grid { grid-template-columns: 1fr; }
-            .spt-table-grid { grid-template-columns: 1fr; }
-            .action-cell { gap: 6px; }
-            .btn-sm { padding: 6px 10px; font-size: 12px; }
+        .modal-body h3 {
+            color: var(--secondary);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 4px;
+            margin-top: 25px;
+        }
+        .modal-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px 20px;
+        }
+        .modal-grid div {
+            border-bottom: 1px solid #f1f3f5;
+            padding: 4px 0;
+        }
+        .modal-grid strong { color: #495057; }
+        #statusDisplay {
+            text-align: center;
+            padding: 20px;
+            font-weight: bold;
+            color: var(--primary);
         }
     </style>
 </head>
 <body>
 
-<!-- TOP NAV -->
-<nav class="topbar">
-    <div class="topbar-brand">
-        <div class="topbar-icon">🏥</div>
-        <div>
-            <h1>Allergy Clinic</h1>
-            <span>Patient Records Dashboard</span>
-        </div>
-    </div>
-    <div class="topbar-nav">
-        <a href="index.html">← New Intake Form</a>
-    </div>
-</nav>
-
-<div class="page">
-
-    <!-- STAT CARDS -->
-    <div class="stats-row">
-        <div class="stat-card">
-            <div class="stat-label">Total Records</div>
-            <div class="stat-value" id="statTotal">—</div>
-        </div>
-        <div class="stat-card green">
-            <div class="stat-label">This Month</div>
-            <div class="stat-value" id="statMonth">—</div>
-        </div>
-        <div class="stat-card amber">
-            <div class="stat-label">Showing</div>
-            <div class="stat-value" id="statShowing">—</div>
-        </div>
+<div class="container">
+    <div class="header-main">
+        <h1>Clinical Master Records Registry</h1>
+        <a href="index.html" class="nav-link">➔ Back to Intake Form</a>
     </div>
 
-    <!-- STATUS TOAST -->
-    <div id="statusDisplay"></div>
-
-    <!-- TOOLBAR -->
-    <div class="toolbar">
-        <div class="search-wrap">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            <input type="text" id="searchName" placeholder="Search by patient name…" oninput="filterRegistry()">
+    <div class="controls-row">
+        <div class="search-box">
+            <input type="text" id="searchName" placeholder="Filter by Patient Name..." oninput="filterRegistry()">
+            <input type="date" id="searchDate" onchange="filterRegistry()">
+            <button onclick="clearFilters()" class="btn-close">Reset</button>
         </div>
-        <input type="date" id="searchDate" onchange="filterRegistry()" title="Filter by date">
-        <button class="btn btn-ghost" onclick="clearFilters()">Clear</button>
-        <button class="btn btn-success" onclick="exportToExcel()">
-            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Export Excel
-        </button>
+        <button onclick="exportToExcel()" class="btn-excel">💾 Download All as Excel (.xlsx)</button>
     </div>
 
-    <!-- RECORDS TABLE -->
-    <div class="card">
-        <div class="card-header">
-            <h2>Patient Records</h2>
-        </div>
-        <div class="table-wrap">
-            <table id="registryTable">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Patient</th>
-                        <th>Reg #</th>
-                        <th>Diagnosis</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="registryBody">
-                    <tr><td colspan="5"><div class="empty-state"><p>Loading records…</p></div></td></tr>
+    <div id="statusDisplay">Initializing clinical connection to Google ledger...</div>
+
+    <div class="table-responsive">
+        <table id="registryTable">
+            <thead>
+                <tr>
+                    <th>Date Recieved</th>
+                    <th>Patient Name</th>
+                    <th>Reg Number</th>
+                    <th>Probable Diagnosis</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="registryBody">
                 </tbody>
-            </table>
-        </div>
-    </div>
-
-</div><!-- /page -->
-
-
-<!-- ── PATIENT RECORD MODAL ──────────────────────────────── -->
-<div id="recordModal" class="modal-overlay">
-    <div class="modal-box">
-
-        <div class="modal-topbar">
-            <h2 id="modalPatientTitle">
-                Patient Record
-                <span id="modalPatientSub"></span>
-            </h2>
-            <div class="modal-btn-group" id="modalBtnGroup">
-                <!-- Buttons injected by JS -->
-            </div>
-        </div>
-
-        <div class="modal-body">
-            <div class="edit-banner" id="editBanner">✏️ Edit mode — make your changes below, then click Save.</div>
-            <form id="editPatientForm" onsubmit="event.preventDefault();">
-                <div id="modalDataBody"></div>
-            </form>
-        </div>
-
+        </table>
     </div>
 </div>
 
+<div id="recordModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalPatientTitle" style="margin:0; color:var(--primary);">Patient Record View</h2>
+            <div>
+                <button id="modalWordDownload" class="btn-excel" style="margin-right: 10px;">Download Document (.docx)</button>
+                <button onclick="closeModal()" class="btn-close">Close Overlay</button>
+            </div>
+        </div>
+        <div class="modal-body" id="modalDataBody">
+            </div>
+    </div>
+</div>
 
 <script>
-    const WEB_APP_URL = "YOUR_NEW_WEB_APP_URL_HERE";
+    // --- APP CONFIGURATION ---
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxmKJMpHR2kv0Ko5R1rn0YP7x5VhNFPKCG1fMXMFlhkAlLJV177NWamBaaAYJ-cgdnIqg/exec";
 
-    let globalRawData  = [];
-    let parsedRecords  = [];
+    let globalRawData = []; 
+    let parsedRecords = []; 
     let activeSelectedRecord = null;
-    let isEditMode     = false;
 
-    /* ── LOAD ─────────────────────────────────────────────── */
-    window.onload = () => {
-        console.log("Admin panel loaded, fetching records...");
+    // Run automatically on page load
+    window.onload = function() {
         fetchRecordsFromLedger();
     };
 
     function fetchRecordsFromLedger() {
-        showStatus("Loading records…", "");
-        console.log("Fetching from:", WEB_APP_URL);
-        
         fetch(WEB_APP_URL)
-        .then(r => {
-            console.log("Response status:", r.status);
-            if (!r.ok) throw new Error("HTTP error: " + r.status);
-            return r.json();
-        })
+        .then(response => response.json())
         .then(data => {
-            console.log("Data received:", data);
-            hideStatus();
-            
-            if (!data || data.length === 0) {
-                showEmptyTable("No records found. Submit the first intake form to get started.");
-                updateStats(0, 0, 0);
-                globalRawData = [];
-                parsedRecords = [];
+            if(data.length === 0) {
+                document.getElementById('statusDisplay').innerText = "Database ledger is completely empty.";
                 return;
             }
+            globalRawData = data; // Keep tracking for raw Excel array generation
             
-            if (data.length < 2) {
-                // Has headers but no data rows
-                showEmptyTable("No records found. Submit the first intake form to get started.");
-                updateStats(0, 0, 0);
-                globalRawData = data;
-                parsedRecords = [];
-                return;
-            }
-            
-            globalRawData = data;
+            // Map table rows to object arrays dynamically matching standard layout
             const headers = data[0];
-            console.log("Headers:", headers);
-            
-            parsedRecords = data.slice(1).map((row, i) => {
-                const obj = {
-                    _rowId: i,
-                    rowNumber: i + 2
-                };
-                headers.forEach((h, j) => {
-                    obj[h] = row[j] !== undefined ? row[j] : '';
+            parsedRecords = data.slice(1).map((row, rIdx) => {
+                let recordObj = {
+        _rowId: rIdx,
+        _sheetRow: rIdx + 2
+    };
+                headers.forEach((header, hIdx) => {
+                    recordObj[header] = row[hIdx];
                 });
-                return obj;
+                return recordObj;
             });
-            
-            console.log("Parsed records:", parsedRecords.length);
+
+            document.getElementById('statusDisplay').style.display = "none";
             renderRegistryRows(parsedRecords);
-            updateStats(parsedRecords.length, countThisMonth(parsedRecords), parsedRecords.length);
         })
         .catch(err => {
-            console.error("Fetch error:", err);
-            showStatus("Could not connect to Google Sheets. Check your network and Web App URL.", "error");
-            showEmptyTable("Error loading records. Please check the console (F12) for details.");
+            console.error(err);
+            document.getElementById('statusDisplay').innerText = "Security block or network disconnection error.";
         });
     }
 
-    function countThisMonth(records) {
-        const now = new Date();
-        return records.filter(r => {
-            if (!r.Date) return false;
-            const d = new Date(r.Date);
-            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-        }).length;
-    }
-
-    function updateStats(total, month, showing) {
-        document.getElementById('statTotal').textContent   = total || 0;
-        document.getElementById('statMonth').textContent   = month || 0;
-        document.getElementById('statShowing').textContent = showing || 0;
-    }
-
-    /* ── RENDER TABLE ─────────────────────────────────────── */
-    function renderRegistryRows(list) {
+    function renderRegistryRows(recordsList) {
         const tbody = document.getElementById('registryBody');
-        if (!tbody) {
-            console.error("registryBody not found!");
-            return;
-        }
         tbody.innerHTML = "";
-        document.getElementById('statShowing').textContent = list.length;
-
-        if (!list || list.length === 0) {
-            showEmptyTable("No records match your search.");
-            return;
-        }
-
-        list.forEach((item, index) => {
+        
+        recordsList.forEach(item => {
             const tr = document.createElement('tr');
-            const dateVal = item.Date ? String(item.Date).split('T')[0] : 'N/A';
-            const name = item.Name || 'Unknown';
-            const regNum = item.RegNumber || '—';
-            const diagnosis = item.ProbableDiagnosis || 'Pending';
+            
+            // Formats standard column visualization arrays cleanly
+            const dateVal = item.Date ? item.Date.split('T')[0] : 'N/A';
             
             tr.innerHTML = `
-                <td class="date-cell">${dateVal}</td>
-                <td>
-                    <div class="patient-name">${escapeHTML(name)}</div>
-                </td>
-                <td class="patient-reg">${escapeHTML(regNum)}</td>
-                <td><span class="badge">${escapeHTML(diagnosis)}</span></td>
-                <td>
-                    <div class="action-cell">
-                        <button class="btn btn-primary btn-sm" onclick="viewRecordDetails(${item._rowId})">View</button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteRecordFromDatabase('${escapeHTML(regNum)}', '${escapeHTML(name)}')">Delete</button>
-                    </div>
-                </td>`;
+                <td>\u{1F4C5} ${dateVal}</td>
+                <td><strong>${item.Name || 'Unlabeled'}</strong></td>
+                <td>${item.RegNumber || '-'}</td>
+                <td><span style="color:var(--secondary); font-weight:600;">${item.ProbableDiagnosis || 'No Diagnosis'}</span></td>
+                <td><button class="btn-action"
+onclick="viewRecordDetails(${item._rowId})">
+👁 View
+</button>
+
+<button class="btn-action"
+onclick="editRecord(${item._rowId})">
+✏ Edit
+</button></td>
+            `;
             tbody.appendChild(tr);
         });
     }
 
-    function escapeHTML(str) {
-        if (!str) return '';
-        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    }
-
-    function showEmptyTable(msg) {
-        const tbody = document.getElementById('registryBody');
-        if (tbody) {
-            tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><p>${msg}</p></div></td></tr>`;
-        }
-    }
-
-    /* ── FILTER / SEARCH ──────────────────────────────────── */
     function filterRegistry() {
-        const name = document.getElementById('searchName').value.toLowerCase();
-        const date = document.getElementById('searchDate').value;
-        const filtered = parsedRecords.filter(r => {
-            const okName = (r.Name || '').toLowerCase().includes(name);
-            const okDate = date ? (r.Date && String(r.Date).includes(date)) : true;
-            return okName && okDate;
+        const nameQuery = document.getElementById('searchName').value.toLowerCase();
+        const dateQuery = document.getElementById('searchDate').value;
+        
+        const filtered = parsedRecords.filter(item => {
+            const matchName = (item.Name || '').toLowerCase().includes(nameQuery);
+            const matchDate = dateQuery ? (item.Date && item.Date.includes(dateQuery)) : true;
+            return matchName && matchDate;
         });
         renderRegistryRows(filtered);
     }
 
     function clearFilters() {
-        document.getElementById('searchName').value = '';
-        document.getElementById('searchDate').value = '';
+        document.getElementById('searchName').value = "";
+        document.getElementById('searchDate').value = "";
         renderRegistryRows(parsedRecords);
     }
 
-    /* ── EXCEL EXPORT ─────────────────────────────────────── */
     function exportToExcel() {
-        if (!parsedRecords || !parsedRecords.length) { 
-            alert("No records to export."); 
-            return; 
-        }
-        const headers = globalRawData[0];
-        const rows = [headers, ...parsedRecords.map(r => headers.map(h => r[h] !== undefined ? r[h] : ''))];
-        const ws = XLSX.utils.aoa_to_sheet(rows);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Patients");
-        XLSX.writeFile(wb, "Allergy_Clinic_Records.xlsx");
-    }
-
-    /* ── STATUS HELPERS ───────────────────────────────────── */
-    function showStatus(msg, type) {
-        const el = document.getElementById('statusDisplay');
-        if (!el) return;
-        el.textContent = msg;
-        el.className = type || '';
-        el.style.display = 'block';
-    }
-    function hideStatus() {
-        const el = document.getElementById('statusDisplay');
-        if (el) el.style.display = 'none';
-    }
-
-    /* ── DELETE ───────────────────────────────────────────── */
-    function deleteRecordFromDatabase(regNumber, name) {
-        if (!confirm(`Delete the record for ${name} (Reg #${regNumber})?\n\nThis cannot be undone.`)) return;
-
-        showStatus(`Deleting record for ${name}…`, "");
-
-        fetch(WEB_APP_URL, {
-            method: 'POST',
-            cache: 'no-cache',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify({ action: "delete", RegNumber: String(regNumber) })
-        })
-        .then(r => r.json())
-        .then(result => {
-            if (result.status !== 'success') throw new Error(result.message || 'Unknown error');
-            showStatus(`✅ Record for ${name} deleted.`, "success");
-            setTimeout(() => { hideStatus(); fetchRecordsFromLedger(); }, 1800);
-        })
-        .catch(err => {
-            showStatus(`❌ Delete failed: ${err.message}`, "error");
-        });
-    }
-
-    /* ── VIEW / DISPLAY MODAL ─────────────────────────────── */
-    function viewRecordDetails(rowId) {
-        activeSelectedRecord = parsedRecords.find(r => r._rowId === rowId);
-        if (!activeSelectedRecord) {
-            console.error("Record not found for rowId:", rowId);
+        if(globalRawData.length <= 1) {
+            alert("No spreadsheet records available to transform into Excel file format.");
             return;
         }
-        isEditMode = false;
-        openModal();
+        const ws = XLSX.utils.aoa_to_sheet(globalRawData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Patient Database");
+        XLSX.writeFile(wb, "Allergy_Clinic_Global_Records.xlsx");
     }
 
-    function openModal() {
-        renderModalContent();
-        document.getElementById('recordModal').style.display = 'block';
-        document.body.style.overflow = 'hidden';
+    function viewRecordDetails(rowId) {
+        activeSelectedRecord = parsedRecords.find(r => r._rowId === rowId);
+        if(!activeSelectedRecord) return;
+
+        document.getElementById('modalPatientTitle').innerText = `Record: ${activeSelectedRecord.Name || 'Unknown Details'}`;
+        
+        let htmlContent = `
+            <h3>Section 1: Patient Demographics</h3>
+            <div class="modal-grid">
+                <div><strong>Registration Number:</strong> ${activeSelectedRecord.RegNumber}</div>
+                <div><strong>Age / Gender:</strong> ${activeSelectedRecord.Age}Y / ${activeSelectedRecord.Gender}</div>
+                <div><strong>Date of Record:</strong> ${activeSelectedRecord.Date ? activeSelectedRecord.Date.split('T')[0] : ''}</div>
+                <div><strong>Contact Number:</strong> ${activeSelectedRecord.ContactNumber}</div>
+                <div><strong>Hometown:</strong> ${activeSelectedRecord.Hometown}</div>
+                <div><strong>Occupation:</strong> ${activeSelectedRecord.Occupation}</div>
+                <div><strong>Referred By:</strong> ${activeSelectedRecord.ReferredBy}</div>
+            </div>
+
+            <h3>Section 2: Clinical Presentation</h3>
+            <div class="modal-grid">
+                <div><strong>Age of Onset (Years):</strong> ${activeSelectedRecord.AgeOfOnset}</div>
+                <div><strong>Anaphylaxis Episodes:</strong> ${activeSelectedRecord.Anaphylaxis}</div>
+                <div><strong>Carries Epipen/Adrenaline:</strong> ${activeSelectedRecord.CarriesEpipen}</div>
+            </div>
+            <p style="margin-top:10px;"><strong>Presenting Complaint:</strong><br>${activeSelectedRecord.PresentingComplaint || '-'}</p>
+
+            <h3>Section 3: Allergy & Medical History</h3>
+            <p><strong>General Allergic History:</strong> ${activeSelectedRecord.GeneralAllergicHistory || '-'}</p>
+            <div class="modal-grid">
+                <div><strong>Drug Allergies:</strong> ${activeSelectedRecord.DrugAllergies}</div>
+                <div><strong>Food Allergies:</strong> ${activeSelectedRecord.FoodAllergies}</div>
+                <div><strong>Tick Bites:</strong> ${activeSelectedRecord.TickBites}</div>
+            </div>
+            <p><strong>Past Medical History:</strong> ${activeSelectedRecord.PastMedicalHistory || '-'}</p>
+            <p><strong>Drug History:</strong> ${activeSelectedRecord.DrugHistory || '-'}</p>
+            <p><strong>Past Surgical History:</strong> ${activeSelectedRecord.PastSurgicalHistory || '-'}</p>
+            <p><strong>Family History:</strong> ${activeSelectedRecord.FamilyHistory || '-'}</p>
+
+            <h3>Section 4: Assessment & Management</h3>
+            <p><strong>Problem List:</strong> ${activeSelectedRecord.ProblemList || '-'}</p>
+            <div class="modal-grid">
+                <div><strong>Probable Diagnosis:</strong> ${activeSelectedRecord.ProbableDiagnosis}</div>
+                <div><strong>Review Plan:</strong> ${activeSelectedRecord.ReviewPlan}</div>
+            </div>
+            <p><strong>Investigations Ordered:</strong> ${activeSelectedRecord.InvestigationsOrdered || '-'}</p>
+            <p><strong>Management Plan:</strong> ${activeSelectedRecord.ManagementPlan || '-'}</p>
+            <p><strong>Prescription Ledger:</strong> ${activeSelectedRecord.Prescription || '-'}</p>
+
+            <h3>Section 5: Skin Prick Test Results</h3>
+            <p><strong>0.1% Histamine (Positive Control):</strong> ${activeSelectedRecord.Histamine || '-'} | <strong>N. Saline (Negative Control):</strong> ${activeSelectedRecord.Saline || '-'}</p>
+            
+            <div style="display:grid; grid-template-columns: repeat(3,1fr); gap:15px; font-size:13px; margin-top:10px; background:#f8f9fa; padding:15px; border-radius:4px;">
+                <div>
+                    <strong>Foods / Extracts</strong><br>
+                    Beef (Ext): ${activeSelectedRecord.BeefExtract || '-'}<br>Pork (Ext): ${activeSelectedRecord.PorkExtract || '-'}<br>Beef (Raw): ${activeSelectedRecord.BeefRaw || '-'}<br>Pork (Raw): ${activeSelectedRecord.PorkRaw || '-'}<br>Milk: ${activeSelectedRecord.Milk || '-'}<br>Gelatin: ${activeSelectedRecord.Gelatin || '-'}<br>Prawns: ${activeSelectedRecord.Prawns || '-'}<br>Tuna: ${activeSelectedRecord.Tuna || '-'}<br>Salmon: ${activeSelectedRecord.Salmon || '-'}<br>Eggs: ${activeSelectedRecord.Eggs || '-'}<br>Chicken: ${activeSelectedRecord.Chicken || '-'}
+                </div>
+                <div>
+                    <strong>Inhalants / Environment</strong><br>
+                    House Dust Mite: ${activeSelectedRecord.HouseDustMite || '-'}<br>Storage Mite: ${activeSelectedRecord.StorageMite || '-'}<br>Cockroach: ${activeSelectedRecord.Cockroach || '-'}<br>Cat Epithelium: ${activeSelectedRecord.CatEpithelium || '-'}<br>Dog Epithelium: ${activeSelectedRecord.DogEpithelium || '-'}<br>Mould Mix: ${activeSelectedRecord.MouldMix || '-'}<br>Grass Pollens: ${activeSelectedRecord.GrassPollens || '-'}<br>Weed Pollens: ${activeSelectedRecord.WeedPollens || '-'}<br>Aspergillus: ${activeSelectedRecord.Aspergillus || '-'}<br>Wheat: ${activeSelectedRecord.Wheat || '-'}
+                </div>
+                <div>
+                    <strong>Medications</strong><br>
+                    IV Penicillin: ${activeSelectedRecord.IVPenicillin || '-'}<br>Oral Penicillin: ${activeSelectedRecord.OralPenicillin || '-'}<br>Amoxicillin: ${activeSelectedRecord.Amoxicillin || '-'}<br>Co-amoxiclav: ${activeSelectedRecord.CoAmoxiclav || '-'}<br>Cefalexin: ${activeSelectedRecord.Cefalexin || '-'}<br>Cefuroxime: ${activeSelectedRecord.Cefuroxime || '-'}<br>Cefotaxime/Ceftriaxone: ${activeSelectedRecord.CefotaximeCeftriaxone || '-'}<br>Meropenem: ${activeSelectedRecord.Meropenem || '-'}<br>Omeprazole: ${activeSelectedRecord.Omeprazole || '-'}<br>Infliximab/Adalimumab: ${activeSelectedRecord.InfliximabAdalimumab || '-'}
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('modalDataBody').innerHTML = htmlContent;
+        document.getElementById('recordModal').style.display = "block";
     }
+
+    function editRecord(rowId){
+
+    activeSelectedRecord =
+      parsedRecords.find(r => r._rowId === rowId);
+
+    if(!activeSelectedRecord) return;
+
+    const html = `
+        <h3>Edit Patient</h3>
+
+        <label>Name</label>
+        <input id="editName"
+               value="${activeSelectedRecord.Name || ''}">
+
+        <br><br>
+
+        <label>Reg Number</label>
+        <input id="editReg"
+               value="${activeSelectedRecord.RegNumber || ''}">
+
+        <br><br>
+
+        <label>Diagnosis</label>
+        <input id="editDiagnosis"
+               value="${activeSelectedRecord.ProbableDiagnosis || ''}">
+
+        <br><br>
+
+        <button onclick="saveRecordChanges()">
+            Save Changes
+        </button>
+    `;
+
+    document.getElementById(
+      "modalDataBody"
+    ).innerHTML = html;
+
+    document.getElementById(
+      "recordModal"
+    ).style.display = "block";
+}
+
+    function saveRecordChanges(){
+
+    const updatedData = {
+
+        action:"update",
+
+        rowNumber:
+            activeSelectedRecord._sheetRow,
+
+        name:
+            document.getElementById("editName").value,
+
+        regNumber:
+            document.getElementById("editReg").value,
+
+        diagnosis:
+            document.getElementById("editDiagnosis").value
+    };
+
+    fetch(WEB_APP_URL,{
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body:JSON.stringify(updatedData)
+    })
+    .then(()=>{
+
+        alert("Record Updated");
+
+        location.reload();
+
+    })
+    .catch(err=>{
+
+        console.error(err);
+
+        alert("Update failed");
+
+    });
+}
 
     function closeModal() {
-        document.getElementById('recordModal').style.display = 'none';
-        document.body.style.overflow = '';
-        isEditMode = false;
+        document.getElementById('recordModal').style.display = "none";
     }
 
-    // Close modal when clicking the dark overlay background
-    document.getElementById('recordModal').addEventListener('click', function(e) {
-        if (e.target === this) closeModal();
-    });
-
-    function renderModalContent() {
-        const rec = activeSelectedRecord;
-        if (!rec) return;
-
-        // Header title
-        document.getElementById('modalPatientTitle').childNodes[0].textContent =
-            isEditMode ? `Editing: ${rec.Name || 'Patient'}` : (rec.Name || 'Patient Record');
-        document.getElementById('modalPatientSub').textContent =
-            `Reg #${rec.RegNumber || '—'}`;
-
-        // Edit banner
-        const banner = document.getElementById('editBanner');
-        banner.className = isEditMode ? 'edit-banner visible' : 'edit-banner';
-
-        // Header buttons
-        const btnGroup = document.getElementById('modalBtnGroup');
-        if (!isEditMode) {
-            btnGroup.innerHTML = `
-                <button class="btn btn-teal btn-sm" id="btnDownloadDoc">⬇ Download .docx</button>
-                <button class="btn btn-primary btn-sm" onclick="enterEditMode()">✏️ Edit</button>
-                <button class="btn btn-ghost btn-sm" onclick="closeModal()">Close</button>`;
-            document.getElementById('btnDownloadDoc').addEventListener('click', downloadWordDoc);
-        } else {
-            btnGroup.innerHTML = `
-                <button class="btn btn-success btn-sm" onclick="submitRecordEditsToCloud()">💾 Save Changes</button>
-                <button class="btn btn-ghost btn-sm" onclick="cancelEdit()">✕ Cancel</button>`;
-        }
-
-        // Body
-        document.getElementById('modalDataBody').innerHTML = buildModalHTML();
-    }
-
-    function enterEditMode() { 
-        isEditMode = true;  
-        renderModalContent(); 
-    }
-    
-    function cancelEdit() { 
-        isEditMode = false; 
-        renderModalContent(); 
-    }
-
-    /* ── FIELD RENDERERS ──────────────────────────────────── */
-    function f(key, type = 'text', readOnly = false) {
-        if (!activeSelectedRecord) return '';
-        let val = activeSelectedRecord[key] || '';
-        if (type === 'date' && String(val).includes('T')) val = val.split('T')[0];
-        if (!isEditMode || readOnly) {
-            return `<div class="field-val">${escapeHTML(String(val)) || '—'}</div>`;
-        }
-        return `<input type="${type}" name="${key}" value="${escapeHTML(String(val))}">`;
-    }
-
-    function ta(key) {
-        if (!activeSelectedRecord) return '';
-        const val = activeSelectedRecord[key] || '';
-        if (!isEditMode) return `<div class="field-val">${escapeHTML(String(val)) || '—'}</div>`;
-        return `<textarea name="${key}">${escapeHTML(String(val))}</textarea>`;
-    }
-
-    function sptField(key) {
-        if (!activeSelectedRecord) return '';
-        const val = activeSelectedRecord[key] || '';
-        if (!isEditMode) return `<span class="spt-val">${escapeHTML(String(val)) || '—'}</span>`;
-        return `<input type="text" name="${key}" value="${escapeHTML(String(val))}">`;
-    }
-
-    /* ── BUILD MODAL HTML ─────────────────────────────────── */
-    function buildModalHTML() {
-        if (!activeSelectedRecord) return '<p>No record selected.</p>';
-        
-        return `
-        <!-- Section 1 -->
-        <div class="section-block">
-            <div class="section-title">Section 1 — Patient Demographics</div>
-            <div class="field-grid">
-                <div class="field-item">
-                    <label>Full Name</label>
-                    ${f('Name')}
-                </div>
-                <div class="field-item">
-                    <label>Registration Number</label>
-                    ${f('RegNumber')}
-                </div>
-                <div class="field-item">
-                    <label>Age (Years)</label>
-                    ${f('Age','number')}
-                </div>
-                <div class="field-item">
-                    <label>Gender</label>
-                    ${f('Gender')}
-                </div>
-                <div class="field-item">
-                    <label>Date of Record</label>
-                    ${f('Date','date')}
-                </div>
-                <div class="field-item">
-                    <label>Contact Number</label>
-                    ${f('ContactNumber')}
-                </div>
-                <div class="field-item">
-                    <label>Hometown</label>
-                    ${f('Hometown')}
-                </div>
-                <div class="field-item">
-                    <label>Occupation</label>
-                    ${f('Occupation')}
-                </div>
-                <div class="field-item">
-                    <label>Referred By</label>
-                    ${f('ReferredBy')}
-                </div>
-            </div>
-        </div>
-
-        <!-- Section 2 -->
-        <div class="section-block">
-            <div class="section-title">Section 2 — Clinical Presentation</div>
-            <div class="field-grid">
-                <div class="field-item">
-                    <label>Age of Onset (Years)</label>
-                    ${f('AgeOfOnset')}
-                </div>
-                <div class="field-item">
-                    <label>Anaphylaxis Episodes</label>
-                    ${f('Anaphylaxis')}
-                </div>
-                <div class="field-item">
-                    <label>Carries Epipen / Adrenaline</label>
-                    ${f('CarriesEpipen')}
-                </div>
-                <div class="field-item field-full">
-                    <label>Presenting Complaint</label>
-                    ${ta('PresentingComplaint')}
-                </div>
-            </div>
-        </div>
-
-        <!-- Section 3 -->
-        <div class="section-block">
-            <div class="section-title">Section 3 — Allergy &amp; Medical History</div>
-            <div class="field-grid">
-                <div class="field-item field-full">
-                    <label>General Allergic History</label>
-                    ${ta('GeneralAllergicHistory')}
-                </div>
-                <div class="field-item">
-                    <label>Drug Allergies</label>
-                    ${f('DrugAllergies')}
-                </div>
-                <div class="field-item">
-                    <label>Food Allergies</label>
-                    ${f('FoodAllergies')}
-                </div>
-                <div class="field-item">
-                    <label>Tick Bites</label>
-                    ${f('TickBites')}
-                </div>
-                <div class="field-item field-full">
-                    <label>Past Medical History</label>
-                    ${ta('PastMedicalHistory')}
-                </div>
-                <div class="field-item field-full">
-                    <label>Drug History</label>
-                    ${ta('DrugHistory')}
-                </div>
-                <div class="field-item field-full">
-                    <label>Past Surgical History</label>
-                    ${ta('PastSurgicalHistory')}
-                </div>
-                <div class="field-item field-full">
-                    <label>Family History</label>
-                    ${ta('FamilyHistory')}
-                </div>
-            </div>
-        </div>
-
-        <!-- Section 4 -->
-        <div class="section-block">
-            <div class="section-title">Section 4 — Assessment &amp; Management</div>
-            <div class="field-grid">
-                <div class="field-item field-full">
-                    <label>Problem List</label>
-                    ${ta('ProblemList')}
-                </div>
-                <div class="field-item">
-                    <label>Probable Diagnosis</label>
-                    ${f('ProbableDiagnosis')}
-                </div>
-                <div class="field-item">
-                    <label>Review Plan</label>
-                    ${f('ReviewPlan')}
-                </div>
-                <div class="field-item field-full">
-                    <label>Investigations Ordered</label>
-                    ${ta('InvestigationsOrdered')}
-                </div>
-                <div class="field-item field-full">
-                    <label>Management Plan</label>
-                    ${ta('ManagementPlan')}
-                </div>
-                <div class="field-item field-full">
-                    <label>Prescription</label>
-                    ${ta('Prescription')}
-                </div>
-            </div>
-        </div>
-
-        <!-- Section 5 -->
-        <div class="section-block">
-            <div class="section-title">Section 5 — Skin Prick Test Results</div>
-            <div class="spt-controls">
-                <div class="field-item">
-                    <label>Positive Control (0.1% Histamine)</label>
-                    ${f('Histamine')}
-                </div>
-                <div class="field-item">
-                    <label>Negative Control (N. Saline)</label>
-                    ${f('Saline')}
-                </div>
-            </div>
-            <div class="spt-table-grid">
-                <div class="spt-group">
-                    <div class="spt-group-header">Foods &amp; Extracts</div>
-                    ${sptRow('Beef (Extract)',  'BeefExtract')}
-                    ${sptRow('Pork (Extract)',  'PorkExtract')}
-                    ${sptRow('Beef (Raw)',      'BeefRaw')}
-                    ${sptRow('Pork (Raw)',      'PorkRaw')}
-                    ${sptRow('Milk',            'Milk')}
-                    ${sptRow('Gelatin',         'Gelatin')}
-                    ${sptRow('Prawns',          'Prawns')}
-                    ${sptRow('Tuna',            'Tuna')}
-                    ${sptRow('Salmon',          'Salmon')}
-                    ${sptRow('Eggs',            'Eggs')}
-                    ${sptRow('Chicken',         'Chicken')}
-                </div>
-                <div class="spt-group">
-                    <div class="spt-group-header">Inhalants &amp; Environment</div>
-                    ${sptRow('House Dust Mite', 'HouseDustMite')}
-                    ${sptRow('Storage Mite',    'StorageMite')}
-                    ${sptRow('Cockroach',       'Cockroach')}
-                    ${sptRow('Cat Epithelium',  'CatEpithelium')}
-                    ${sptRow('Dog Epithelium',  'DogEpithelium')}
-                    ${sptRow('Mould Mix',       'MouldMix')}
-                    ${sptRow('Grass Pollens',   'GrassPollens')}
-                    ${sptRow('Weed Pollens',    'WeedPollens')}
-                    ${sptRow('Aspergillus',     'Aspergillus')}
-                    ${sptRow('Wheat',           'Wheat')}
-                </div>
-                <div class="spt-group">
-                    <div class="spt-group-header">Medications</div>
-                    ${sptRow('IV Penicillin',          'IVPenicillin')}
-                    ${sptRow('Oral Penicillin',        'OralPenicillin')}
-                    ${sptRow('Amoxicillin',            'Amoxicillin')}
-                    ${sptRow('Co-amoxiclav',           'CoAmoxiclav')}
-                    ${sptRow('Cefalexin',              'Cefalexin')}
-                    ${sptRow('Cefuroxime',             'Cefuroxime')}
-                    ${sptRow('Cefotaxime/Ceftriaxone', 'CefotaximeCeftriaxone')}
-                    ${sptRow('Meropenem',              'Meropenem')}
-                    ${sptRow('Omeprazole',             'Omeprazole')}
-                    ${sptRow('Infliximab/Adalimumab',  'InfliximabAdalimumab')}
-                </div>
-            </div>
-        </div>`;
-    }
-
-    function sptRow(label, key) {
-        if (!activeSelectedRecord) return '';
-        const val = activeSelectedRecord[key] || '';
-        if (!isEditMode) {
-            return `<div class="spt-row"><span class="spt-name">${label}</span><span class="spt-val">${escapeHTML(String(val)) || '—'}</span></div>`;
-        }
-        return `<div class="spt-row"><span class="spt-name">${label}</span><input type="text" name="${key}" value="${escapeHTML(String(val))}"></div>`;
-    }
-
-    /* ── SAVE EDITS ───────────────────────────────────────── */
-    function submitRecordEditsToCloud() {
-        if (!activeSelectedRecord) return;
-
-        const btnGroup = document.getElementById('modalBtnGroup');
-        btnGroup.innerHTML = `<span style="color:#94a3b8; font-size:14px; font-weight:600;">⏳ Saving…</span>`;
-
-        const form = document.getElementById('editPatientForm');
-        const formElements = form.querySelectorAll('input, textarea, select');
-        const payload = { 
-            action: "update", 
-            rowNumber: activeSelectedRecord.rowNumber 
-        };
-        
-        // Collect all form values
-        formElements.forEach(field => {
-            if (field.name) {
-                payload[field.name] = field.value;
-            }
-        });
-
-        console.log("Saving payload:", payload);
-
-        fetch(WEB_APP_URL, {
-            method: 'POST',
-            cache: 'no-cache',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify(payload)
-        })
-        .then(r => r.json())
-        .then(result => {
-            console.log("Save result:", result);
-            if (result.status !== 'success') throw new Error(result.message || 'Unknown error');
-
-            // Update local memory
-            formElements.forEach(field => {
-                if (field.name) {
-                    activeSelectedRecord[field.name] = field.value;
-                }
-            });
-            
-            // Update in parsedRecords array
-            const idx = parsedRecords.findIndex(r => r._rowId === activeSelectedRecord._rowId);
-            if (idx !== -1) {
-                formElements.forEach(field => {
-                    if (field.name) {
-                        parsedRecords[idx][field.name] = field.value;
-                    }
-                });
-            }
-
-            isEditMode = false;
-            renderModalContent();
-            renderRegistryRows(parsedRecords);
-
-            showStatus('✅ Record updated successfully.', 'success');
-            setTimeout(() => { 
-                hideStatus(); 
-                fetchRecordsFromLedger();
-            }, 2200);
-        })
-        .catch(err => {
-            console.error("Save error:", err);
-            alert('❌ Failed to save: ' + err.message);
-            isEditMode = true;
-            renderModalContent();
-        });
-    }
-
-    /* ── WORD DOC DOWNLOAD ────────────────────────────────── */
-    function downloadWordDoc() {
-        const rec = activeSelectedRecord;
-        if (!rec) return;
+    // Modal click bind for historical word generator mapping directly over dynamic array headers
+    document.getElementById('modalWordDownload').addEventListener('click', function() {
+        if(!activeSelectedRecord) return;
         
         const { Document, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, BorderStyle, HeadingLevel } = docx;
-        const bs = { style: BorderStyle.SINGLE, size: 4, color: "DEE2E6" };
-        const cp = { top: 100, bottom: 100, left: 150, right: 150 };
+        const borderStyle = { style: BorderStyle.SINGLE, size: 4, color: "DEE2E6" };
+        const cellPadding = { top: 100, bottom: 100, left: 150, right: 150 };
 
-        function mc(text, bold = false, width = 50, colspan = 1) {
+        function makeCell(text, bold = false, width = 50, colspan = 1) {
             return new TableCell({
-                children: [new Paragraph({ children: [new TextRun({ text: String(text || '-'), bold, size: 22 })] })],
+                children: [new Paragraph({ children: [new TextRun({ text: text || "-", bold: bold, size: 22 })] })],
                 width: { size: width, type: WidthType.PERCENTAGE },
                 columnSpan: colspan,
-                borders: { top: bs, bottom: bs, left: bs, right: bs },
-                margins: cp
+                borders: { top: borderStyle, bottom: borderStyle, left: borderStyle, right: borderStyle },
+                margins: cellPadding
             });
         }
 
-        const doc = new Document({ sections: [{ children: [
-            new Paragraph({ text: "ALLERGY CLINIC – PATIENT HISTORY RECORD", heading: HeadingLevel.HEADING_1, alignment: "center" }),
-            new Paragraph({ text: "" }),
-            new Paragraph({ text: "1. Patient Demographics", heading: HeadingLevel.HEADING_2 }),
-            new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: [
-                new TableRow({ children: [mc("Name",true,25), mc(rec.Name,false,25), mc("Reg Number",true,25), mc(rec.RegNumber,false,25)] }),
-                new TableRow({ children: [mc("Age / Gender",true,25), mc(`${rec.Age||''}Y / ${rec.Gender||''}`,false,25), mc("Date",true,25), mc(rec.Date?String(rec.Date).split('T')[0]:'',false,25)] }),
-                new TableRow({ children: [mc("Contact",true,25), mc(rec.ContactNumber,false,25), mc("Hometown",true,25), mc(rec.Hometown,false,25)] }),
-                new TableRow({ children: [mc("Occupation",true,25), mc(rec.Occupation,false,25), mc("Referred By",true,25), mc(rec.ReferredBy,false,25)] }),
-            ]}),
-            new Paragraph({ text: "" }),
-            new Paragraph({ text: "2. Clinical Presentation", heading: HeadingLevel.HEADING_2 }),
-            new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: [
-                new TableRow({ children: [mc("Age of Onset",true,25), mc(rec.AgeOfOnset,false,25), mc("Anaphylaxis",true,25), mc(rec.Anaphylaxis,false,25)] }),
-                new TableRow({ children: [mc("Presenting Complaint",true,25), mc(rec.PresentingComplaint,false,75,3)] }),
-                new TableRow({ children: [mc("Carries Epipen",true,25), mc(rec.CarriesEpipen,false,75,3)] }),
-            ]}),
-            new Paragraph({ text: "" }),
-            new Paragraph({ text: "3. Allergy & Medical History", heading: HeadingLevel.HEADING_2 }),
-            new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: [
-                new TableRow({ children: [mc("General Allergic History",true,25), mc(rec.GeneralAllergicHistory,false,75,3)] }),
-                new TableRow({ children: [mc("Drug Allergies",true,25), mc(rec.DrugAllergies,false,25), mc("Food Allergies",true,25), mc(rec.FoodAllergies,false,25)] }),
-                new TableRow({ children: [mc("Tick Bites",true,25), mc(rec.TickBites,false,75,3)] }),
-                new TableRow({ children: [mc("Past Medical History",true,25), mc(rec.PastMedicalHistory,false,75,3)] }),
-                new TableRow({ children: [mc("Drug History",true,25), mc(rec.DrugHistory,false,75,3)] }),
-                new TableRow({ children: [mc("Past Surgical History",true,25), mc(rec.PastSurgicalHistory,false,75,3)] }),
-                new TableRow({ children: [mc("Family History",true,25), mc(rec.FamilyHistory,false,75,3)] }),
-            ]}),
-            new Paragraph({ text: "" }),
-            new Paragraph({ text: "4. Assessment & Management", heading: HeadingLevel.HEADING_2 }),
-            new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: [
-                new TableRow({ children: [mc("Problem List",true,25), mc(rec.ProblemList,false,75,3)] }),
-                new TableRow({ children: [mc("Probable Diagnosis",true,25), mc(rec.ProbableDiagnosis,false,25), mc("Review Plan",true,25), mc(rec.ReviewPlan,false,25)] }),
-                new TableRow({ children: [mc("Investigations Ordered",true,25), mc(rec.InvestigationsOrdered,false,75,3)] }),
-                new TableRow({ children: [mc("Management Plan",true,25), mc(rec.ManagementPlan,false,75,3)] }),
-                new TableRow({ children: [mc("Prescription",true,25), mc(rec.Prescription,false,75,3)] }),
-            ]}),
-            new Paragraph({ text: "" }),
-            new Paragraph({ text: "5. Skin Prick Test Results", heading: HeadingLevel.HEADING_2 }),
-            new Paragraph({ text: `Positive Control (Histamine): ${rec.Histamine||'-'}    Negative Control (Saline): ${rec.Saline||'-'}` }),
-            new Paragraph({ text: "" }),
-            new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: [
-                new TableRow({ children: [mc("Allergen",true,20),mc("Result",true,13),mc("Allergen",true,20),mc("Result",true,13),mc("Allergen",true,20),mc("Result",true,14)] }),
-                new TableRow({ children: [mc("Beef (Extract)"),mc(rec.BeefExtract),mc("House Dust Mite"),mc(rec.HouseDustMite),mc("IV Penicillin"),mc(rec.IVPenicillin)] }),
-                new TableRow({ children: [mc("Pork (Extract)"),mc(rec.PorkExtract),mc("Storage Mite"),mc(rec.StorageMite),mc("Oral Penicillin"),mc(rec.OralPenicillin)] }),
-                new TableRow({ children: [mc("Beef (Raw)"),mc(rec.BeefRaw),mc("Cockroach"),mc(rec.Cockroach),mc("Amoxicillin"),mc(rec.Amoxicillin)] }),
-                new TableRow({ children: [mc("Pork (Raw)"),mc(rec.PorkRaw),mc("Cat Epithelium"),mc(rec.CatEpithelium),mc("Co-amoxiclav"),mc(rec.CoAmoxiclav)] }),
-                new TableRow({ children: [mc("Milk"),mc(rec.Milk),mc("Dog Epithelium"),mc(rec.DogEpithelium),mc("Cefalexin"),mc(rec.Cefalexin)] }),
-                new TableRow({ children: [mc("Gelatin"),mc(rec.Gelatin),mc("Mould Mix"),mc(rec.MouldMix),mc("Cefuroxime"),mc(rec.Cefuroxime)] }),
-                new TableRow({ children: [mc("Prawns"),mc(rec.Prawns),mc("Grass Pollens"),mc(rec.GrassPollens),mc("Cefotaxime/Ceftriaxone"),mc(rec.CefotaximeCeftriaxone)] }),
-                new TableRow({ children: [mc("Tuna"),mc(rec.Tuna),mc("Weed Pollens"),mc(rec.WeedPollens),mc("Meropenem"),mc(rec.Meropenem)] }),
-                new TableRow({ children: [mc("Salmon"),mc(rec.Salmon),mc("Aspergillus"),mc(rec.Aspergillus),mc("Omeprazole"),mc(rec.Omeprazole)] }),
-                new TableRow({ children: [mc("Eggs"),mc(rec.Eggs),mc("Wheat"),mc(rec.Wheat),mc("Infliximab/Adalimumab"),mc(rec.InfliximabAdalimumab)] }),
-                new TableRow({ children: [mc("Chicken"),mc(rec.Chicken),mc(""),mc(""),mc(""),mc("")] }),
-            ]})
-        ]}]});
+        const doc = new Document({
+            sections: [{
+                children: [
+                    new Paragraph({ text: "ALLERGY CLINIC – PATIENT HISTORY RECORD", heading: HeadingLevel.HEADING_1, alignment: "center" }),
+                    new Paragraph({ text: "\n" }),
+                    
+                    new Paragraph({ text: "1. Patient Demographics", heading: HeadingLevel.HEADING_2 }),
+                    new Table({
+                        width: { size: 100, type: WidthType.PERCENTAGE },
+                        rows: [
+                            new TableRow({ children: [makeCell("Name", true, 25), makeCell(activeSelectedRecord.Name, false, 25), makeCell("Reg Number", true, 25), makeCell(activeSelectedRecord.RegNumber, false, 25)] }),
+                            new TableRow({ children: [makeCell("Age (Years) / Gender", true, 25), makeCell(`${activeSelectedRecord.Age}Y / ${activeSelectedRecord.Gender}`, false, 25), makeCell("Date", true, 25), makeCell(activeSelectedRecord.Date ? activeSelectedRecord.Date.split('T')[0] : '', false, 25)] }),
+                            new TableRow({ children: [makeCell("Contact Number", true, 25), makeCell(activeSelectedRecord.ContactNumber, false, 25), makeCell("Hometown", true, 25), makeCell(activeSelectedRecord.Hometown, false, 25)] }),
+                            new TableRow({ children: [makeCell("Occupation", true, 25), makeCell(activeSelectedRecord.Occupation, false, 25), makeCell("Referred By", true, 25), makeCell(activeSelectedRecord.ReferredBy, false, 25)] })
+                        ]
+                    }),
+                    new Paragraph({ text: "\n" }),
+
+                    new Paragraph({ text: "2. Clinical Presentation", heading: HeadingLevel.HEADING_2 }),
+                    new Table({
+                        width: { size: 100, type: WidthType.PERCENTAGE },
+                        rows: [
+                            new TableRow({ children: [makeCell("Age of Onset (Years)", true, 25), makeCell(activeSelectedRecord.AgeOfOnset, false, 25), makeCell("Anaphylaxis Episodes", true, 25), makeCell(activeSelectedRecord.Anaphylaxis, false, 25)] }),
+                            new TableRow({ children: [makeCell("Presenting Complaint", true, 25), makeCell(activeSelectedRecord.PresentingComplaint, false, 75, 3)] }),
+                            new TableRow({ children: [makeCell("Carries Epipen / Adrenaline", true, 25), makeCell(activeSelectedRecord.CarriesEpipen, false, 75, 3)] })
+                        ]
+                    }),
+                    new Paragraph({ text: "\n" }),
+
+                    new Paragraph({ text: "3. Allergy & Medical History", heading: HeadingLevel.HEADING_2 }),
+                    new Table({
+                        width: { size: 100, type: WidthType.PERCENTAGE },
+                        rows: [
+                            new TableRow({ children: [makeCell("General Allergic History", true, 25), makeCell(activeSelectedRecord.GeneralAllergicHistory, false, 75, 3)] }),
+                            new TableRow({ children: [makeCell("Drug Allergies", true, 25), makeCell(activeSelectedRecord.DrugAllergies, false, 25), makeCell("Food Allergies", true, 25), makeCell(activeSelectedRecord.FoodAllergies, false, 25)] }),
+                            new TableRow({ children: [makeCell("Tick Bites", true, 25), makeCell(activeSelectedRecord.TickBites, false, 75, 3)] }),
+                            new TableRow({ children: [makeCell("Past Medical History", true, 25), makeCell(activeSelectedRecord.PastMedicalHistory, false, 75, 3)] }),
+                            new TableRow({ children: [makeCell("Drug History", true, 25), makeCell(activeSelectedRecord.DrugHistory, false, 75, 3)] }),
+                            new TableRow({ children: [makeCell("Past Surgical History", true, 25), makeCell(activeSelectedRecord.PastSurgicalHistory, false, 75, 3)] }),
+                            new TableRow({ children: [makeCell("Family History", true, 25), makeCell(activeSelectedRecord.FamilyHistory, false, 75, 3)] })
+                        ]
+                    }),
+                    new Paragraph({ text: "\n" }),
+
+                    new Paragraph({ text: "4. Assessment & Management", heading: HeadingLevel.HEADING_2 }),
+                    new Table({
+                        width: { size: 100, type: WidthType.PERCENTAGE },
+                        rows: [
+                            new TableRow({ children: [makeCell("Problem List", true, 25), makeCell(activeSelectedRecord.ProblemList, false, 75, 3)] }),
+                            new TableRow({ children: [makeCell("Probable Diagnosis", true, 25), makeCell(activeSelectedRecord.ProbableDiagnosis, false, 25), makeCell("Review Plan", true, 25), makeCell(activeSelectedRecord.ReviewPlan, false, 25)] }),
+                            new TableRow({ children: [makeCell("Investigations Ordered", true, 25), makeCell(activeSelectedRecord.InvestigationsOrdered, false, 75, 3)] }),
+                            new TableRow({ children: [makeCell("Management Plan", true, 25), makeCell(activeSelectedRecord.ManagementPlan, false, 75, 3)] }),
+                            new TableRow({ children: [makeCell("Prescription", true, 25), makeCell(activeSelectedRecord.Prescription, false, 75, 3)] })
+                        ]
+                    }),
+                    new Paragraph({ text: "\n" }),
+
+                    new Paragraph({ text: "5. Skin Prick Test Results", heading: HeadingLevel.HEADING_2 }),
+                    new Paragraph({ text: `Positive Control (0.1% Histamine): ${activeSelectedRecord.Histamine || "-"}     Negative Control (N. Saline): ${activeSelectedRecord.Saline || "-"}\n\n` }),
+                    
+                    new Table({
+                        width: { size: 100, type: WidthType.PERCENTAGE },
+                        rows: [
+                            new TableRow({ children: [makeCell("Allergen", true, 20), makeCell("Result", true, 13), makeCell("Allergen", true, 20), makeCell("Result", true, 13), makeCell("Allergen", true, 20), makeCell("Result", true, 14)] }),
+                            new TableRow({ children: [makeCell("Beef (Extract)"), makeCell(activeSelectedRecord.BeefExtract), makeCell("House Dust Mite"), makeCell(activeSelectedRecord.HouseDustMite), makeCell("IV Penicillin"), makeCell(activeSelectedRecord.IVPenicillin)] }),
+                            new TableRow({ children: [makeCell("Pork (Extract)"), makeCell(activeSelectedRecord.PorkExtract), makeCell("Storage Mite"), makeCell(activeSelectedRecord.StorageMite), makeCell("Oral Penicillin"), makeCell(activeSelectedRecord.OralPenicillin)] }),
+                            new TableRow({ children: [makeCell("Beef (Raw)"), makeCell(activeSelectedRecord.BeefRaw), makeCell("Cockroach"), makeCell(activeSelectedRecord.Cockroach), makeCell("Amoxicillin"), makeCell(activeSelectedRecord.Amoxicillin)] }),
+                            new TableRow({ children: [makeCell("Pork (Raw)"), makeCell(activeSelectedRecord.PorkRaw), makeCell("Cat epithelium"), makeCell(activeSelectedRecord.CatEpithelium), makeCell("Co-amoxiclav"), makeCell(activeSelectedRecord.CoAmoxiclav)] }),
+                            new TableRow({ children: [makeCell("Milk"), makeCell(activeSelectedRecord.Milk), makeCell("Dog epithelium"), makeCell(activeSelectedRecord.DogEpithelium), makeCell("Cefalexin"), makeCell(activeSelectedRecord.Cefalexin)] }),
+                            new TableRow({ children: [makeCell("Gelatin"), makeCell(activeSelectedRecord.Gelatin), makeCell("Mould Mix"), makeCell(activeSelectedRecord.MouldMix), makeCell("Cefuroxime"), makeCell(activeSelectedRecord.Cefuroxime)] }),
+                            new TableRow({ children: [makeCell("Prawns"), makeCell(activeSelectedRecord.Prawns), makeCell("Grass Pollens"), makeCell(activeSelectedRecord.GrassPollens), makeCell("Cefotaxime/Ceftriaxone"), makeCell(activeSelectedRecord.CefotaximeCeftriaxone)] }),
+                            new TableRow({ children: [makeCell("Tuna"), makeCell(activeSelectedRecord.Tuna), makeCell("Weed Pollens"), makeCell(activeSelectedRecord.WeedPollens), makeCell("Meropenem"), makeCell(activeSelectedRecord.Meropenem)] }),
+                            new TableRow({ children: [makeCell("Salmon"), makeCell(activeSelectedRecord.Salmon), makeCell("Aspergillus"), makeCell(activeSelectedRecord.Aspergillus), makeCell("Omeprazole"), makeCell(activeSelectedRecord.Omeprazole)] }),
+                            new TableRow({ children: [makeCell("Eggs"), makeCell(activeSelectedRecord.Eggs), makeCell("Wheat"), makeCell(activeSelectedRecord.Wheat), makeCell("Infliximab/Adalimumab"), makeCell(activeSelectedRecord.InfliximabAdalimumab)] }),
+                            new TableRow({ children: [makeCell("Chicken"), makeCell(activeSelectedRecord.Chicken), makeCell(""), makeCell(""), makeCell(""), makeCell("")] })
+                        ]
+                    })
+                ]
+            }]
+        });
 
         docx.Packer.toBlob(doc).then(blob => {
-            saveAs(blob, `Allergy_Record_${rec.RegNumber || 'Patient'}.docx`);
+            saveAs(blob, `Historical_Allergy_Record_${activeSelectedRecord.RegNumber || 'Archive'}.docx`);
         });
-    }
+    });
 </script>
 </body>
 </html>
