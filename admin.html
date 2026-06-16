@@ -398,7 +398,7 @@ if (item.Date) {
 
         html += '<h3>Section 2: Clinical Presentation</h3><div class="modal-grid">';
         html += '<div class="form-group"><label>Age of Onset</label><input type="text" name="AgeOfOnset" value="' + escapeHTML(rec.AgeOfOnset || '') + '"></div>';
-        html += '<div class="form-group"><label>Anaphylaxis</label><select name="Anaphylaxis"><option ' + (rec.Anaphylaxis==='None'?'selected':'') + '>None</option><option ' + (rec.Anaphylaxis==='One'?'selected':'') + '>One</option><option ' + (rec.Anaphylaxis==='Multiple'?'selected':'') + '>Multiple</option></select></div>';
+        html += '<div class="form-group"><label>Anaphylaxis</label><select name="Anaphylaxis"><option ' + (rec.Anaphylaxis==='None'?'selected':'') + '>None</option><option ' + (rec.Anaphylaxis==='1'?'selected':'') + '>1</option><option ' + (rec.Anaphylaxis==='2'?'selected':'') + '>2</option><option ' + (rec.Anaphylaxis==='3'?'selected':'') + '>3</option><option ' + (rec.Anaphylaxis==='4'?'selected':'') + '>4</option><option ' + (rec.Anaphylaxis==='5'?'selected':'') + '>5</option><option ' + (rec.Anaphylaxis==='>5'?'selected':'') + '>>5</option></select></div>';
         html += '<div class="form-group"><label>Carries Epipen</label><div class="radio-group"><label><input type="radio" name="CarriesEpipen" value="Yes" ' + (rec.CarriesEpipen==='Yes'?'checked':'') + '> Yes</label><label><input type="radio" name="CarriesEpipen" value="No" ' + (rec.CarriesEpipen==='No'?'checked':'') + '> No</label></div></div>';
         html += '</div>';
         html += '<div class="form-group"><label>Presenting Complaint</label><textarea name="PresentingComplaint">' + escapeHTML(rec.PresentingComplaint || '') + '</textarea></div>';
