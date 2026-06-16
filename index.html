@@ -337,110 +337,136 @@
 
     let currentSubmittedData = null;
 
-    // Handle Form submission
-    document.getElementById('allergyForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const submitBtn = document.getElementById('submitBtn');
-        const statusMsg = document.getElementById('statusMessage');
-        
-        submitBtn.disabled = true;
-        submitBtn.innerText = "Saving Data...";
-        statusMsg.style.display = "block";
-        statusMsg.style.backgroundColor = "#fff3cd";
-        statusMsg.style.color = "#856404";
-        statusMsg.innerText = "Transmitting record securely to clinical ledger...";
-
-        // Collect all form values
-        const formData = {
-            name: document.getElementById('name').value,
-            regNumber: document.getElementById('regNumber').value,
-            age: document.getElementById('age').value,
-            gender: document.getElementById('gender').value,
-            date: document.getElementById('date').value,
-            contact: document.getElementById('contact').value,
-            hometown: document.getElementById('hometown').value,
-            occupation: document.getElementById('occupation').value,
-            referredBy: document.getElementById('referredBy').value,
-            ageOnset: document.getElementById('ageOnset').value,
-            anaphylaxis: document.getElementById('anaphylaxis').value,
-            epipen: document.querySelector('input[name="epipen"]:checked').value,
-            complaint: document.getElementById('complaint').value,
-            investigationsDone: document.getElementById('investigationsDone').value,
-            allergicHistory: Array.from(document.querySelectorAll('input[name="allergicHistory"]:checked')).map(cb => cb.value).join(', '),
-            drugAllergies: document.getElementById('drugAllergies').value,
-            foodAllergies: document.getElementById('foodAllergies').value,
-            tickBites: document.querySelector('input[name="tickBites"]:checked').value,
-            medicalHistory: document.getElementById('medicalHistory').value,
-            drugHistory: document.getElementById('drugHistory').value,
-            surgicalHistory: document.getElementById('surgicalHistory').value,
-            familyHistory: document.getElementById('familyHistory').value,
-            problems: document.getElementById('problems').value,
-            diagnosis: document.getElementById('diagnosis').value,
-            review: document.getElementById('review').value,
-            investigations: document.getElementById('investigations').value,
-            management: document.getElementById('management').value,
-            prescription: document.getElementById('prescription').value,
-            histamine: document.getElementById('histamine').value,
-            saline: document.getElementById('saline').value,
-            beefExt: document.getElementById('beefExt').value,
-            porkExt: document.getElementById('porkExt').value,
-            beefRaw: document.getElementById('beefRaw').value,
-            porkRaw: document.getElementById('porkRaw').value,
-            milk: document.getElementById('milk').value,
-            gelatin: document.getElementById('gelatin').value,
-            prawns: document.getElementById('prawns').value,
-            tuna: document.getElementById('tuna').value,
-            salmon: document.getElementById('salmon').value,
-            eggs: document.getElementById('eggs').value,
-            chicken: document.getElementById('chicken').value,
-            dustMite: document.getElementById('dustMite').value,
-            storageMite: document.getElementById('storageMite').value,
-            cockroach: document.getElementById('cockroach').value,
-            cat: document.getElementById('cat').value,
-            dog: document.getElementById('dog').value,
-            mould: document.getElementById('mould').value,
-            grass: document.getElementById('grass').value,
-            weed: document.getElementById('weed').value,
-            aspergillus: document.getElementById('aspergillus').value,
-            wheat: document.getElementById('wheat').value,
-            ivPen: document.getElementById('ivPen').value,
-            oralPen: document.getElementById('oralPen').value,
-            amox: document.getElementById('amox').value,
-            coAmox: document.getElementById('coAmox').value,
-            cefalexin: document.getElementById('cefalexin').value,
-            cefuroxime: document.getElementById('cefuroxime').value,
-            cefotaxime: document.getElementById('cefotaxime').value,
-            mero: document.getElementById('mero').value,
-            omep: document.getElementById('omep').value,
-            infliximab: document.getElementById('infliximab').value
-        };
 
         // Post request to Google Apps Script
-        fetch(WEB_APP_URL, {
-            method: 'POST',
-            mode: 'no-cors', // Essential for Google Script endpoint execution
-            cache: 'no-cache',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData)
-        })
-        .then(() => {
-            statusMsg.style.backgroundColor = "#d4edda";
-            statusMsg.style.color = "#155724";
-            statusMsg.innerText = "Record successfully committed to ledger database.";
-            submitBtn.innerText = "Saved";
-            currentSubmittedData = formData;
-            document.getElementById('downloadWordBtn').style.display = "inline-block";
-        })
-        .catch(error => {
-            console.error('Error:', error);
+        document.getElementById('allergyForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const submitBtn = document.getElementById('submitBtn');
+    const statusMsg = document.getElementById('statusMessage');
+    
+    submitBtn.disabled = true;
+    submitBtn.innerText = "Saving Data...";
+    statusMsg.style.display = "block";
+    statusMsg.style.backgroundColor = "#fff3cd";
+    statusMsg.style.color = "#856404";
+    statusMsg.innerText = "Transmitting record securely to clinical ledger...";
+
+    const formData = {
+        name: document.getElementById('name').value,
+        regNumber: document.getElementById('regNumber').value,
+        age: document.getElementById('age').value,
+        gender: document.getElementById('gender').value,
+        date: document.getElementById('date').value,
+        contact: document.getElementById('contact').value,
+        hometown: document.getElementById('hometown').value,
+        occupation: document.getElementById('occupation').value,
+        referredBy: document.getElementById('referredBy').value,
+        ageOnset: document.getElementById('ageOnset').value,
+        anaphylaxis: document.getElementById('anaphylaxis').value,
+        epipen: document.querySelector('input[name="epipen"]:checked').value,
+        complaint: document.getElementById('complaint').value,
+        investigationsDone: document.getElementById('investigationsDone').value,
+        allergicHistory: Array.from(document.querySelectorAll('input[name="allergicHistory"]:checked')).map(cb => cb.value).join(', '),
+        drugAllergies: document.getElementById('drugAllergies').value,
+        foodAllergies: document.getElementById('foodAllergies').value,
+        tickBites: document.querySelector('input[name="tickBites"]:checked').value,
+        medicalHistory: document.getElementById('medicalHistory').value,
+        drugHistory: document.getElementById('drugHistory').value,
+        surgicalHistory: document.getElementById('surgicalHistory').value,
+        familyHistory: document.getElementById('familyHistory').value,
+        problems: document.getElementById('problems').value,
+        diagnosis: document.getElementById('diagnosis').value,
+        review: document.getElementById('review').value,
+        investigations: document.getElementById('investigations').value,
+        management: document.getElementById('management').value,
+        prescription: document.getElementById('prescription').value,
+        histamine: document.getElementById('histamine').value,
+        saline: document.getElementById('saline').value,
+        beefExt: document.getElementById('beefExt').value,
+        porkExt: document.getElementById('porkExt').value,
+        beefRaw: document.getElementById('beefRaw').value,
+        porkRaw: document.getElementById('porkRaw').value,
+        milk: document.getElementById('milk').value,
+        gelatin: document.getElementById('gelatin').value,
+        prawns: document.getElementById('prawns').value,
+        tuna: document.getElementById('tuna').value,
+        salmon: document.getElementById('salmon').value,
+        eggs: document.getElementById('eggs').value,
+        chicken: document.getElementById('chicken').value,
+        dustMite: document.getElementById('dustMite').value,
+        storageMite: document.getElementById('storageMite').value,
+        cockroach: document.getElementById('cockroach').value,
+        cat: document.getElementById('cat').value,
+        dog: document.getElementById('dog').value,
+        mould: document.getElementById('mould').value,
+        grass: document.getElementById('grass').value,
+        weed: document.getElementById('weed').value,
+        aspergillus: document.getElementById('aspergillus').value,
+        wheat: document.getElementById('wheat').value,
+        ivPen: document.getElementById('ivPen').value,
+        oralPen: document.getElementById('oralPen').value,
+        amox: document.getElementById('amox').value,
+        coAmox: document.getElementById('coAmox').value,
+        cefalexin: document.getElementById('cefalexin').value,
+        cefuroxime: document.getElementById('cefuroxime').value,
+        cefotaxime: document.getElementById('cefotaxime').value,
+        mero: document.getElementById('mero').value,
+        omep: document.getElementById('omep').value,
+        infliximab: document.getElementById('infliximab').value
+    };
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', WEB_APP_URL, true);
+    xhr.setRequestHeader('Content-Type', 'text/plain;charset=utf-8');
+
+    xhr.onload = function() {
+        if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+                var result = JSON.parse(xhr.responseText);
+                if (result.status === 'success') {
+                    statusMsg.style.backgroundColor = "#d4edda";
+                    statusMsg.style.color = "#155724";
+                    statusMsg.innerText = "Record successfully saved!";
+                    submitBtn.innerText = "Saved";
+                    submitBtn.disabled = false;
+                    currentSubmittedData = formData;
+                    document.getElementById('downloadWordBtn').style.display = "inline-block";
+                } else {
+                    statusMsg.style.backgroundColor = "#f8d7da";
+                    statusMsg.style.color = "#721c24";
+                    statusMsg.innerText = result.message || "Error saving record.";
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = "Submit & Save Record";
+                }
+            } catch(e) {
+                statusMsg.style.backgroundColor = "#d4edda";
+                statusMsg.style.color = "#155724";
+                statusMsg.innerText = "Record saved!";
+                submitBtn.innerText = "Saved";
+                submitBtn.disabled = false;
+                currentSubmittedData = formData;
+                document.getElementById('downloadWordBtn').style.display = "inline-block";
+            }
+        } else {
             statusMsg.style.backgroundColor = "#f8d7da";
             statusMsg.style.color = "#721c24";
-            statusMsg.innerText = "Connection execution error. Please try again.";
+            statusMsg.innerText = "Error: HTTP " + xhr.status;
             submitBtn.disabled = false;
             submitBtn.innerText = "Submit & Save Record";
-        });
-    });
+        }
+    };
+
+    xhr.onerror = function() {
+        statusMsg.style.backgroundColor = "#f8d7da";
+        statusMsg.style.color = "#721c24";
+        statusMsg.innerText = "Connection error. Please try again.";
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Submit & Save Record";
+    };
+
+    xhr.send(JSON.stringify(formData));
+});
 
     // Handle Word Document Generation (.docx)
     document.getElementById('downloadWordBtn').addEventListener('click', function() {
