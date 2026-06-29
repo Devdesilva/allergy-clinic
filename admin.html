@@ -292,15 +292,32 @@ if (item.Date) {
     }
 
     function exportToExcel() {
-        if (!globalRawData || globalRawData.length < 2) {
-            alert("No records to export.");
-            return;
-        }
-        var ws = XLSX.utils.aoa_to_sheet(globalRawData);
-        var wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Patient Database");
-        XLSX.writeFile(wb, "Allergy_Clinic_Records.xlsx");
+    if (!globalRawData || globalRawData.length < 2) {
+        alert("No records to export.");
+        return;
     }
+    
+    var headers = globalRawData[0];
+    var refIndex = headers.indexOf('ReferralLetter');
+    
+    var exportData;
+    if (refIndex !== -1) {
+        exportData = globalRawData.map(function(row) {
+            var newRow = [];
+            for (var i = 0; i < row.length; i++) {
+                if (i !== refIndex) newRow.push(row[i]);
+            }
+            return newRow;
+        });
+    } else {
+        exportData = globalRawData;
+    }
+    
+    var ws = XLSX.utils.aoa_to_sheet(exportData);
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Patient Database");
+    XLSX.writeFile(wb, "Allergy_Clinic_Records.xlsx");
+}
 
    function printRecord(rowId) {
     var rec = parsedRecords.find(function(r) { return r._rowId === rowId; });
@@ -643,8 +660,7 @@ if (item.Date) {
         editMsg.innerText = "❌ Connection error. Please try again.";
     };
         
-    // Remove ReferralLetter before sending to Sheet
-    delete payload.ReferralLetter;
+    
     xhr.send(JSON.stringify(payload));
 }
     // ── DELETE ───────────────────────────────
