@@ -176,7 +176,7 @@
     window.location.href = 'login.html';
 }
     // ═══════════════════════════════════════════
-    // CHANGE THIS TO YOUR ACTUAL WEB APP URL
+
     // ═══════════════════════════════════════════
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxmKJMpHR2kv0Ko5R1rn0YP7x5VhNFPKCG1fMXMFlhkAlLJV177NWamBaaAYJ-cgdnIqg/exec";
 
@@ -341,6 +341,7 @@ if (item.Date) {
     html += '<tr><td class="label">Age of Onset (Years)</td><td>' + (rec.AgeOfOnset || '-') + '</td><td class="label">Anaphylaxis Episodes</td><td>' + (rec.Anaphylaxis || '-') + '</td></tr>';
     html += '<tr><td class="label">Presenting Complaint</td><td colspan="3">' + (rec.PresentingComplaint || '-').replace(/\n/g, '<br>') + '</td></tr>';
     html += '<tr><td class="label">Investigations Done</td><td colspan="3">' + (rec.InvestigationsDone || '-').replace(/\n/g, '<br>') + '</td></tr>';
+    html += '<tr><td class="label">Referral Letter</td><td colspan="3">' + (rec.ReferralLetter || '-').replace(/\n/g, '<br>') + '</td></tr>';
     html += '<tr><td class="label">Carries Epipen / Adrenaline</td><td colspan="3">' + (rec.CarriesEpipen || '-') + '</td></tr>';
     html += '</table>';
     
@@ -419,6 +420,7 @@ if (item.Date) {
         html += '</div>';
         html += '<p><strong>Presenting Complaint:</strong><br>' + (rec.PresentingComplaint || '-') + '</p>';
         html += '<p><strong>Investigations Done:</strong><br>' + (rec.InvestigationsDone || '-') + '</p>';
+        html += '<p><strong>Referral Letter:</strong><br>' + (rec.ReferralLetter || '-').replace(/\n/g, '<br>') + '</p>';
     
 
         html += '<h3>Section 3: Allergy & Medical History</h3>';
@@ -499,6 +501,7 @@ if (item.Date) {
         html += '</div>';
         html += '<div class="form-group"><label>Presenting Complaint</label><textarea name="PresentingComplaint">' + escapeHTML(rec.PresentingComplaint || '') + '</textarea></div>';
         html += '<div class="form-group"><label>Investigations Done</label><textarea name="InvestigationsDone">' + escapeHTML(rec.InvestigationsDone || '') + '</textarea></div>';
+        html += '<div class="form-group"><label>Referral Letter</label><textarea name="ReferralLetter" rows="6">' + escapeHTML(rec.ReferralLetter || '') + '</textarea></div>';
 
         html += '<h3>Section 3: Allergy & Medical History</h3>';
         var allergicSelected = (rec.GeneralAllergicHistory || '').split(',').map(function(s) { return s.trim(); });
@@ -639,7 +642,9 @@ if (item.Date) {
         editMsg.style.color = "#721c24";
         editMsg.innerText = "❌ Connection error. Please try again.";
     };
-    
+        
+    // Remove ReferralLetter before sending to Sheet
+    delete payload.ReferralLetter;
     xhr.send(JSON.stringify(payload));
 }
     // ── DELETE ───────────────────────────────
@@ -768,6 +773,7 @@ document.getElementById('modalWordDownload').addEventListener('click', function(
                         new TableRow({ children: [makeCell("Age of Onset (Years)", true, 25), makeCell(data.AgeOfOnset, false, 25), makeCell("Anaphylaxis Episodes", true, 25), makeCell(data.Anaphylaxis, false, 25)] }),
                         new TableRow({ children: [makeCell("Presenting Complaint", true, 25), makeCellWithBreaks(data.PresentingComplaint, false, 75, 3)] }),
                         new TableRow({ children: [makeCell("Investigations Done", true, 25), makeCellWithBreaks(data.InvestigationsDone, false, 75, 3)] }),
+                        new TableRow({ children: [makeCell("Referral Letter", true, 25), makeCellWithBreaks(data.ReferralLetter, false, 75, 3)] }),
                         new TableRow({ children: [makeCell("Carries Epipen / Adrenaline", true, 25), makeCell(data.CarriesEpipen, false, 75, 3)] })
                     ]
                 }),
