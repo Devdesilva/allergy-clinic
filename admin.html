@@ -9,104 +9,229 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
         :root {
-            --primary: #0056b3;
-            --secondary: #17a2b8;
-            --dark: #212529;
-            --light: #f8f9fa;
-            --border: #dee2e6;
-            --success: #28a745;
-            --danger: #dc3545;
-            --warning: #ffc107;
+            --primary: #0b5cab;
+            --primary-dark: #08457f;
+            --secondary: #0f8fa3;
+            --dark: #1f2937;
+            --muted: #6b7280;
+            --light: #f7f9fc;
+            --surface: #ffffff;
+            --border: #d8e0ea;
+            --success: #218838;
+            --danger: #c82333;
+            --warning: #f0b429;
         }
+        * { box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
+            line-height: 1.55;
             color: var(--dark);
-            background-color: #e9ecef;
+            background: linear-gradient(180deg, #eef4fb 0%, #f7f9fc 45%, #eef2f7 100%);
             margin: 0;
-            padding: 20px;
+            padding: 28px 18px;
+            min-height: 100vh;
         }
         .container {
-            max-width: 1200px;
+            max-width: 1280px;
             margin: 0 auto;
-            background: #ffffff;
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            background: var(--surface);
+            padding: 32px;
+            border: 1px solid rgba(11, 92, 171, 0.12);
+            border-radius: 16px;
+            box-shadow: 0 18px 45px rgba(31, 41, 55, 0.10);
         }
         .header-main {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 3px solid var(--primary);
-            padding-bottom: 20px;
-            margin-bottom: 30px;
+            border-bottom: 1px solid var(--border);
+            padding: 2px 0 22px;
+            margin-bottom: 24px;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 18px;
         }
-        .header-main h1 { color: var(--primary); margin: 0; font-size: 26px; text-transform: uppercase; }
-        .nav-link { color: var(--primary); text-decoration: none; font-weight: bold; }
-        .nav-link:hover { text-decoration: underline; }
+        .header-main h1 {
+            color: var(--primary-dark);
+            margin: 0;
+            font-size: clamp(23px, 3vw, 30px);
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+        .header-subtitle { margin: 5px 0 0; color: var(--muted); font-size: 14px; }
+        .nav-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            color: var(--primary);
+            background: #edf5ff;
+            border: 1px solid #cfe3fb;
+            border-radius: 9px;
+            padding: 9px 13px;
+            text-decoration: none;
+            font-weight: 700;
+        }
+        .nav-link:hover { background: #e2efff; text-decoration: none; }
         .controls-row {
-            display: flex; justify-content: space-between; gap: 20px; margin-bottom: 20px; flex-wrap: wrap;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 18px;
+            margin-bottom: 20px;
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--light);
+            flex-wrap: wrap;
         }
-        .search-box { display: flex; gap: 10px; flex-grow: 1; max-width: 600px; flex-wrap: wrap; }
+        .search-box {
+            display: grid;
+            grid-template-columns: minmax(230px, 1fr) minmax(170px, 0.65fr) auto;
+            gap: 10px;
+            flex: 1 1 620px;
+            align-items: center;
+        }
+        .toolbar-actions { display: flex; gap: 9px; flex-wrap: wrap; }
         input[type="text"], input[type="date"], input[type="number"], select, textarea {
-            padding: 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 15px;
-            width: 100%; box-sizing: border-box;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 15px;
+            width: 100%;
+            background: #fff;
+            color: var(--dark);
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #74aee8;
+            box-shadow: 0 0 0 3px rgba(11, 92, 171, 0.12);
         }
         textarea { resize: vertical; min-height: 60px; }
         button {
-            padding: 10px 20px; font-size: 15px; font-weight: bold; border: none;
-            border-radius: 4px; cursor: pointer; white-space: nowrap;
+            padding: 10px 17px;
+            font-size: 14px;
+            font-weight: 700;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: transform 0.12s, box-shadow 0.12s, opacity 0.12s;
         }
+        button:hover { transform: translateY(-1px); box-shadow: 0 5px 13px rgba(31, 41, 55, 0.14); }
+        button:active { transform: translateY(0); }
         .btn-excel { background-color: var(--success); color: white; }
         .btn-primary { background-color: var(--primary); color: white; }
-        .btn-warning { background-color: var(--warning); color: #000; }
+        .btn-warning { background-color: var(--warning); color: #1f2937; }
         .btn-danger { background-color: var(--danger); color: white; }
-        .btn-close { background-color: #6c757d; color: white; }
-        .btn-action { padding: 6px 12px; font-size: 13px; margin: 2px; }
-        .btn-save { background-color: var(--success); color: white; padding: 12px 30px; font-size: 16px; }
-        .table-responsive { width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: 4px; }
-        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 15px; }
-        th, td { padding: 12px 15px; border-bottom: 1px solid var(--border); }
-        th { background-color: var(--light); color: var(--primary); font-weight: 600; }
-        tr:hover { background-color: #f1f3f5; }
+        .btn-close { background-color: #64748b; color: white; }
+        .btn-action { padding: 7px 10px; font-size: 12px; margin: 2px; border-radius: 7px; }
+        .btn-save { background-color: var(--success); color: white; padding: 12px 26px; font-size: 15px; }
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: 0 8px 24px rgba(31, 41, 55, 0.06);
+        }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; text-align: left; font-size: 14px; }
+        th, td { padding: 13px 14px; border-bottom: 1px solid #e7edf4; }
+        th {
+            background: var(--primary-dark);
+            color: white;
+            font-weight: 700;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        th:first-child { border-top-left-radius: 11px; }
+        th:last-child { border-top-right-radius: 11px; }
+        tbody tr:nth-child(even) { background: #fbfcfe; }
+        tbody tr:hover { background: #eef6ff; }
+        tbody tr:last-child td { border-bottom: none; }
+        .sort-button {
+            appearance: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            width: 100%;
+            padding: 0;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            color: inherit;
+            font: inherit;
+            text-align: left;
+            box-shadow: none;
+        }
+        .sort-button:hover { transform: none; box-shadow: none; color: #dcecff; }
+        .sort-indicator { min-width: 16px; text-align: center; opacity: 0.72; font-size: 13px; }
+        .sort-indicator.active { opacity: 1; color: #ffffff; }
+        .actions-header { min-width: 250px; }
         .modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto; padding: 40px 10px; box-sizing: border-box;
+            display: none;
+            position: fixed;
+            inset: 0;
+            background-color: rgba(15, 23, 42, 0.62);
+            backdrop-filter: blur(3px);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 40px 10px;
         }
         .modal-content {
-            background: white; max-width: 950px; margin: 0 auto; padding: 30px;
-            border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); position: relative;
+            background: white;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 30px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.45);
+            box-shadow: 0 25px 60px rgba(15, 23, 42, 0.26);
+            position: relative;
         }
         .modal-header {
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: 20px;
-            flex-wrap: wrap; gap: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 13px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         .modal-body h3 { color: var(--secondary); border-bottom: 1px solid var(--border); padding-bottom: 4px; margin-top: 25px; }
         .modal-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 20px; }
         .modal-grid div { border-bottom: 1px solid #f1f3f5; padding: 4px 0; }
         .modal-grid strong { color: #495057; }
-        .allergen-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; background: #f8f9fa; padding: 15px; border-radius: 4px; margin-top: 10px; font-size: 13px; }
-        .allergen-col h4 { margin: 0 0 8px 0; color: var(--primary); }
+        .allergen-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 10px; font-size: 13px; }
+        .allergen-col h4 { margin: 0 0 8px; color: var(--primary); }
         .allergen-row { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; border-bottom: 1px dashed #e0e0e0; }
         .allergen-row input { width: 80px; padding: 4px 6px; text-align: center; font-size: 13px; }
-        #statusDisplay { text-align: center; padding: 20px; font-weight: bold; color: var(--primary); }
-        .edit-banner { background: #fff3cd; border: 1px solid #ffc107; padding: 10px 15px; border-radius: 4px; margin-bottom: 15px; font-weight: bold; color: #856404; }
+        #statusDisplay { text-align: center; padding: 20px; font-weight: 700; color: var(--primary); }
+        .edit-banner { background: #fff3cd; border: 1px solid #ffc107; padding: 10px 15px; border-radius: 7px; margin-bottom: 15px; font-weight: 700; color: #856404; }
         .form-group { margin-bottom: 12px; }
         .form-group label { display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px; }
         .radio-group { display: flex; gap: 20px; }
         .radio-group label { font-weight: normal; display: flex; align-items: center; gap: 4px; }
+        @media (max-width: 780px) {
+            body { padding: 12px; }
+            .container { padding: 20px 14px; border-radius: 12px; }
+            .search-box { grid-template-columns: 1fr; }
+            .toolbar-actions { width: 100%; }
+            .toolbar-actions button { flex: 1; }
+            .modal-grid, .allergen-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header-main">
-        <h1>Clinical Master Records Registry</h1>
-        <a href="index.html" class="nav-link">➔ Back to Intake Form</a>
+        <div>
+            <h1>Clinical Master Records Registry</h1>
+            <p class="header-subtitle">Search, review, update and print patient records.</p>
+        </div>
+        <a href="index.html" class="nav-link">← Back to Intake Form</a>
     </div>
 
     <div class="controls-row">
@@ -115,9 +240,9 @@
             <input type="date" id="searchDate" onchange="filterRegistry()">
             <button onclick="clearFilters()" class="btn-close">Reset</button>
         </div>
-        <div>
-            <button onclick="exportToExcel()" class="btn-excel">Download All as Excel (.xlsx)</button>
-            <button onclick="fetchRecordsFromLedger()" class="btn-primary" style="margin-left:8px;">Refresh</button>
+        <div class="toolbar-actions">
+            <button onclick="exportToExcel()" class="btn-excel">Download Excel</button>
+            <button onclick="fetchRecordsFromLedger()" class="btn-primary">Refresh Records</button>
         </div>
     </div>
 
@@ -127,11 +252,11 @@
         <table id="registryTable">
             <thead>
                 <tr>
-                    <th>Date Received</th>
-                    <th>Patient Name</th>
-                    <th>Reg Number</th>
-                    <th>Probable Diagnosis</th>
-                    <th>Actions</th>
+                    <th><button type="button" class="sort-button" onclick="sortRegistry('Date')">Date Received <span class="sort-indicator" data-sort-key="Date">↕</span></button></th>
+                    <th><button type="button" class="sort-button" onclick="sortRegistry('Name')">Patient Name <span class="sort-indicator" data-sort-key="Name">↕</span></button></th>
+                    <th><button type="button" class="sort-button" onclick="sortRegistry('RegNumber')">Reg Number <span class="sort-indicator" data-sort-key="RegNumber">↕</span></button></th>
+                    <th><button type="button" class="sort-button" onclick="sortRegistry('ProbableDiagnosis')">Probable Diagnosis <span class="sort-indicator" data-sort-key="ProbableDiagnosis">↕</span></button></th>
+                    <th class="actions-header">Actions</th>
                 </tr>
             </thead>
             <tbody id="registryBody">
@@ -183,6 +308,7 @@
     let globalRawData = [];
     let parsedRecords = [];
     let activeSelectedRecord = null;
+    let sortState = { key: 'Date', direction: 'desc' };
 
     window.onload = function() {
         fetchRecordsFromLedger();
@@ -221,7 +347,7 @@
             });
 
             statusEl.style.display = "none";
-            renderRegistryRows(parsedRecords);
+            applyFiltersAndSort();
         })
         .catch(function(err) {
             console.error("Error:", err);
@@ -236,6 +362,116 @@
         return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
 
+    function parseClinicDate(value) {
+        if (value === undefined || value === null || value === '') return null;
+
+        if (value instanceof Date && !isNaN(value.getTime())) return value;
+
+        if (typeof value === 'number' && isFinite(value)) {
+            // Supports Google Sheets/Excel serial dates as well as timestamps.
+            if (value > 20000 && value < 100000) {
+                return new Date(Math.round((value - 25569) * 86400 * 1000));
+            }
+            var numericDate = new Date(value);
+            return isNaN(numericDate.getTime()) ? null : numericDate;
+        }
+
+        var text = String(value).trim();
+        var match = text.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+        if (match) {
+            return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+        }
+
+        match = text.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+        if (match) {
+            return new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1]));
+        }
+
+        var parsed = new Date(text);
+        return isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    function formatClinicDate(value) {
+        var date = parseClinicDate(value);
+        if (!date) return 'N/A';
+        return String(date.getDate()).padStart(2, '0') + '/' +
+            String(date.getMonth() + 1).padStart(2, '0') + '/' +
+            date.getFullYear();
+    }
+
+    function compareRecords(a, b, key) {
+        if (key === 'Date') {
+            var dateA = parseClinicDate(a.Date);
+            var dateB = parseClinicDate(b.Date);
+            if (!dateA && !dateB) return a._rowId - b._rowId;
+            if (!dateA) return 1;
+            if (!dateB) return -1;
+            return dateA.getTime() - dateB.getTime();
+        }
+
+        var valueA = String(a[key] || '').trim();
+        var valueB = String(b[key] || '').trim();
+        return valueA.localeCompare(valueB, undefined, { numeric: true, sensitivity: 'base' });
+    }
+
+    function getFilteredAndSortedRecords() {
+        var nameQ = document.getElementById('searchName').value.trim().toLowerCase();
+        var dateQ = document.getElementById('searchDate').value;
+
+        var list = parsedRecords.filter(function(record) {
+            var nameMatches = String(record.Name || '').toLowerCase().indexOf(nameQ) !== -1;
+            var recordDate = parseClinicDate(record.Date);
+            var dateMatches = true;
+
+            if (dateQ) {
+                var selectedDate = parseClinicDate(dateQ);
+                dateMatches = Boolean(recordDate && selectedDate &&
+                    recordDate.getFullYear() === selectedDate.getFullYear() &&
+                    recordDate.getMonth() === selectedDate.getMonth() &&
+                    recordDate.getDate() === selectedDate.getDate());
+            }
+            return nameMatches && dateMatches;
+        });
+
+        list.sort(function(a, b) {
+            if (sortState.key === 'Date') {
+                var dateA = parseClinicDate(a.Date);
+                var dateB = parseClinicDate(b.Date);
+                if (!dateA && !dateB) return b._rowId - a._rowId;
+                if (!dateA) return 1;
+                if (!dateB) return -1;
+            }
+
+            var result = compareRecords(a, b, sortState.key);
+            return sortState.direction === 'asc' ? result : -result;
+        });
+
+        return list;
+    }
+
+    function updateSortIndicators() {
+        document.querySelectorAll('.sort-indicator').forEach(function(indicator) {
+            var isActive = indicator.getAttribute('data-sort-key') === sortState.key;
+            indicator.textContent = isActive ? (sortState.direction === 'asc' ? '▲' : '▼') : '↕';
+            indicator.classList.toggle('active', isActive);
+        });
+    }
+
+    function applyFiltersAndSort() {
+        renderRegistryRows(getFilteredAndSortedRecords());
+        updateSortIndicators();
+    }
+
+    function sortRegistry(key) {
+        if (sortState.key === key) {
+            sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+            sortState.key = key;
+            sortState.direction = key === 'Date' ? 'desc' : 'asc';
+        }
+        applyFiltersAndSort();
+    }
+
     function renderRegistryRows(list) {
         var tbody = document.getElementById('registryBody');
         tbody.innerHTML = "";
@@ -247,18 +483,7 @@
         
         list.forEach(function(item) {
             var tr = document.createElement('tr');
-            var dateVal = 'N/A';
-if (item.Date) {
-    var d = new Date(item.Date);
-    if (!isNaN(d.getTime())) {
-        var day = String(d.getDate()).padStart(2, '0');
-        var month = String(d.getMonth() + 1).padStart(2, '0');
-        var year = d.getFullYear();
-        dateVal = day + '/' + month + '/' + year;
-    } else {
-        dateVal = String(item.Date).split('T')[0];
-    }
-}
+            var dateVal = formatClinicDate(item.Date);
             tr.innerHTML = 
                 '<td>' + dateVal + '</td>' +
                 '<td><strong>' + escapeHTML(item.Name || 'Unknown') + '</strong></td>' +
@@ -275,20 +500,13 @@ if (item.Date) {
     }
 
     function filterRegistry() {
-        var nameQ = document.getElementById('searchName').value.toLowerCase();
-        var dateQ = document.getElementById('searchDate').value;
-        var filtered = parsedRecords.filter(function(r) {
-            var okName = (r.Name || '').toLowerCase().indexOf(nameQ) !== -1;
-            var okDate = dateQ ? (r.Date && String(r.Date).indexOf(dateQ) !== -1) : true;
-            return okName && okDate;
-        });
-        renderRegistryRows(filtered);
+        applyFiltersAndSort();
     }
 
     function clearFilters() {
         document.getElementById('searchName').value = "";
         document.getElementById('searchDate').value = "";
-        renderRegistryRows(parsedRecords);
+        applyFiltersAndSort();
     }
 
     function exportToExcel() {
@@ -323,91 +541,118 @@ if (item.Date) {
     var rec = parsedRecords.find(function(r) { return r._rowId === rowId; });
     if (!rec) return;
 
-    var printWindow = window.open('', '_blank', 'width=900,height=700');
-    
-    var dateStr = rec.Date ? String(rec.Date).split('T')[0] : '-';
-    
-    var html = '<html><head><title>Print Record - ' + (rec.Name || 'Patient') + '</title>';
+    var printWindow = window.open('', '_blank', 'width=980,height=760');
+    if (!printWindow) {
+        alert('The print window was blocked. Please allow pop-ups for this page and try again.');
+        return;
+    }
+
+    function safe(value, fallback) {
+        var output = value === undefined || value === null || value === '' ? (fallback || '-') : String(value);
+        return output.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+
+    function safeLines(value) {
+        return safe(value).replace(/\r?\n/g, '<br>');
+    }
+
+    var dateStr = formatClinicDate(rec.Date);
+    var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title></title>';
     html += '<style>';
-    html += 'body { font-family: Arial, sans-serif; padding: 20px; font-size: 13px; }';
-    html += 'h1 { text-align: center; color: #0056b3; font-size: 18px; }';
-    html += 'h2 { color: #17a2b8; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 20px; font-size: 15px; }';
-    html += 'table { width: 100%; border-collapse: collapse; margin: 10px 0; }';
-    html += 'td { padding: 6px 8px; border: 1px solid #ddd; vertical-align: top; }';
-    html += '.label { font-weight: bold; background: #f8f9fa; width: 25%; }';
-    html += '.allergen-table td { font-size: 12px; padding: 4px 6px; }';
-    html += '.allergen-table .header { background: #0056b3; color: white; font-weight: bold; text-align: center; }';
-    html += '@media print { body { padding: 0; } .no-print { display: none; } }';
+    html += '@page { size: A4 portrait; margin: 0; }';
+    html += 'html, body { margin: 0; padding: 0; background: #fff; color: #000; }';
+    html += 'body { font-family: Arial, Helvetica, sans-serif; font-size: 10.5pt; line-height: 1.28; }';
+    html += '.print-page { box-sizing: border-box; width: 210mm; min-height: 297mm; margin: 0 auto; padding: 9mm 11mm; background: #fff; }';
+    html += '.page-one { page-break-after: always; break-after: page; }';
+    html += '.page-two { display: flex; flex-direction: column; }';
+    html += 'h1 { margin: 0 0 5mm; text-align: center; color: #000; font-size: 17pt; line-height: 1.1; letter-spacing: .2pt; }';
+    html += 'h2 { margin: 4mm 0 2mm; padding: 0 0 1.4mm; color: #000; border-bottom: .35mm solid #000; font-size: 12.5pt; line-height: 1.15; }';
+    html += '.section { break-inside: avoid; page-break-inside: avoid; }';
+    html += 'table { width: 100%; border-collapse: collapse; table-layout: fixed; margin: 0 0 3.2mm; }';
+    html += 'td { padding: 2.2mm 2.4mm; border: .3mm solid #000; vertical-align: top; font-size: 10.5pt; overflow-wrap: anywhere; }';
+    html += '.label { width: 23%; font-weight: 700; background: #fff; }';
+    html += '.section-five { flex: 1; display: flex; flex-direction: column; }';
+    html += '.control-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10mm; margin: 3mm 0 4mm; align-items: end; font-size: 10.5pt; }';
+    html += '.control-item { display: flex; align-items: flex-end; white-space: nowrap; }';
+    html += '.control-value { flex: 1; min-width: 35mm; min-height: 7mm; margin-left: 2.5mm; padding: 0 2mm 1mm; border-bottom: .4mm solid #000; font-weight: 600; }';
+    html += '.allergen-table { height: 168mm; margin: 0; table-layout: fixed; }';
+    html += '.allergen-table tr { height: 13.5mm; }';
+    html += '.allergen-table td { padding: 2mm 2.1mm; border: .35mm solid #000; vertical-align: middle; font-size: 10.5pt; line-height: 1.15; overflow-wrap: normal; word-break: normal; }';
+    html += '.allergen-table td:nth-child(1), .allergen-table td:nth-child(3), .allergen-table td:nth-child(5) { width: 22%; }';
+    html += '.allergen-table td:nth-child(2), .allergen-table td:nth-child(4), .allergen-table td:nth-child(6) { width: 11.33%; text-align: center; }';
+    html += '.allergen-table .header { background: #fff !important; color: #000 !important; border: .5mm solid #000; font-weight: 800; text-align: center; font-size: 11pt; }';
+    html += '.print-toolbar { width: 210mm; margin: 12px auto; display: flex; align-items: center; gap: 12px; font-family: Arial, sans-serif; }';
+    html += '.print-toolbar button { padding: 10px 18px; border: 0; border-radius: 6px; background: #0b5cab; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }';
+    html += '.print-toolbar span { font-size: 13px; color: #333; }';
+    html += '@media screen { body { background: #e5e7eb; } .print-page { box-shadow: 0 5px 24px rgba(0,0,0,.16); margin-bottom: 14px; } }';
+    html += '@media print { .no-print { display: none !important; } .print-page { width: 210mm; min-height: 297mm; margin: 0; box-shadow: none; } }';
     html += '</style></head><body>';
-    
+
+    html += '<div class="print-toolbar no-print"><button onclick="window.print()">Print This Record</button><span>Use A4, portrait and 100% scale.</span></div>';
+
+    html += '<div class="print-page page-one">';
     html += '<h1>ALLERGY CLINIC – PATIENT HISTORY RECORD</h1>';
-    html += '<button class="no-print" onclick="window.print()" style="padding:10px 20px;font-size:16px;margin-bottom:15px;">🖨 Print This Page</button>';
-    
-    // Section 1
-    html += '<h2>1. Patient Demographics</h2>';
-    html += '<table>';
-    html += '<tr><td class="label">Name</td><td>' + (rec.Name || '-') + '</td><td class="label">Reg Number</td><td>' + (rec.RegNumber || '-') + '</td></tr>';
-    html += '<tr><td class="label">Age / Gender</td><td>' + (rec.Age || '-') + 'Y / ' + (rec.Gender || '-') + '</td><td class="label">Date</td><td>' + dateStr + '</td></tr>';
-    html += '<tr><td class="label">Contact Number</td><td>' + (rec.ContactNumber || '-') + '</td><td class="label">Hometown</td><td>' + (rec.Hometown || '-') + '</td></tr>';
-    html += '<tr><td class="label">Occupation</td><td>' + (rec.Occupation || '-') + '</td><td class="label">Referred By</td><td>' + (rec.ReferredBy || '-') + '</td></tr>';
-    html += '</table>';
-    
-    // Section 2
-    html += '<h2>2. Clinical Presentation</h2>';
-    html += '<table>';
-    html += '<tr><td class="label">Age of Onset (Years)</td><td>' + (rec.AgeOfOnset || '-') + '</td><td class="label">Anaphylaxis Episodes</td><td>' + (rec.Anaphylaxis || '-') + '</td></tr>';
-    html += '<tr><td class="label">Presenting Complaint</td><td colspan="3">' + (rec.PresentingComplaint || '-').replace(/\n/g, '<br>') + '</td></tr>';
-    html += '<tr><td class="label">Investigations Done</td><td colspan="3">' + (rec.InvestigationsDone || '-').replace(/\n/g, '<br>') + '</td></tr>';
-    html += '<tr><td class="label">Referral Letter</td><td colspan="3">' + (rec.ReferralLetter || '-').replace(/\n/g, '<br>') + '</td></tr>';
-    html += '<tr><td class="label">Carries Epipen / Adrenaline</td><td colspan="3">' + (rec.CarriesEpipen || '-') + '</td></tr>';
-    html += '</table>';
-    
-    // Section 3
-    html += '<h2>3. Allergy & Medical History</h2>';
-    html += '<table>';
-    html += '<tr><td class="label">General Allergic History</td><td colspan="3">' + (rec.GeneralAllergicHistory || '-') + '</td></tr>';
-    html += '<tr><td class="label">Drug Allergies</td><td>' + (rec.DrugAllergies || '-') + '</td><td class="label">Food Allergies</td><td>' + (rec.FoodAllergies || '-') + '</td></tr>';
-    html += '<tr><td class="label">Tick Bites</td><td colspan="3">' + (rec.TickBites || '-') + '</td></tr>';
-    html += '<tr><td class="label">Past Medical History</td><td colspan="3">' + (rec.PastMedicalHistory || '-').replace(/\n/g, '<br>') + '</td></tr>';
-    html += '<tr><td class="label">Drug History</td><td colspan="3">' + (rec.DrugHistory || '-').replace(/\n/g, '<br>') + '</td></tr>';
-    html += '<tr><td class="label">Past Surgical History</td><td colspan="3">' + (rec.PastSurgicalHistory || '-').replace(/\n/g, '<br>') + '</td></tr>';
-    html += '<tr><td class="label">Family History</td><td colspan="3">' + (rec.FamilyHistory || '-').replace(/\n/g, '<br>') + '</td></tr>';
-    html += '</table>';
-    
-    // Section 4
-    html += '<h2>4. Assessment & Management</h2>';
-    html += '<table>';
-    html += '<tr><td class="label">Problem List</td><td colspan="3">' + (rec.ProblemList || '-').replace(/\n/g, '<br>') + '</td></tr>';
-    html += '<tr><td class="label">Probable Diagnosis</td><td>' + (rec.ProbableDiagnosis || '-').replace(/\n/g, '<br>') + '</td><td class="label">Review Plan</td><td>' + (rec.ReviewPlan || '-') + '</td></tr>';
-    html += '<tr><td class="label">Investigations Ordered</td><td colspan="3">' + (rec.InvestigationsOrdered || '-').replace(/\n/g, '<br>') + '</td></tr>';
-    html += '<tr><td class="label">Management Plan</td><td colspan="3">' + (rec.ManagementPlan || '-').replace(/\n/g, '<br>') + '</td></tr>';
-    html += '<tr><td class="label">Prescription</td><td colspan="3">' + (rec.Prescription || '-').replace(/\n/g, '<br>') + '</td></tr>';
-    html += '</table>';
-    
-    // Section 5
-    html += '<h2>5. Skin Prick Test Results</h2>';
-    html += '<p><strong>Positive Control (0.1% Histamine):</strong> ' + (rec.Histamine || '-') + ' &nbsp;&nbsp;&nbsp; <strong>Negative Control (N. Saline):</strong> ' + (rec.Saline || '-') + '</p>';
-    
-    // Allergen table - matching Word doc exactly
+
+    html += '<div class="section"><h2>1. Patient Demographics</h2><table>';
+    html += '<tr><td class="label">Name</td><td>' + safe(rec.Name) + '</td><td class="label">Reg Number</td><td>' + safe(rec.RegNumber) + '</td></tr>';
+    html += '<tr><td class="label">Age / Gender</td><td>' + safe(rec.Age) + 'Y / ' + safe(rec.Gender) + '</td><td class="label">Date</td><td>' + safe(dateStr) + '</td></tr>';
+    html += '<tr><td class="label">Contact Number</td><td>' + safe(rec.ContactNumber) + '</td><td class="label">Hometown</td><td>' + safe(rec.Hometown) + '</td></tr>';
+    html += '<tr><td class="label">Occupation</td><td>' + safe(rec.Occupation) + '</td><td class="label">Referred By</td><td>' + safe(rec.ReferredBy) + '</td></tr>';
+    html += '</table></div>';
+
+    html += '<div class="section"><h2>2. Clinical Presentation</h2><table>';
+    html += '<tr><td class="label">Age of Onset (Years)</td><td>' + safe(rec.AgeOfOnset) + '</td><td class="label">Anaphylaxis Episodes</td><td>' + safe(rec.Anaphylaxis) + '</td></tr>';
+    html += '<tr><td class="label">Presenting Complaint</td><td colspan="3">' + safeLines(rec.PresentingComplaint) + '</td></tr>';
+    html += '<tr><td class="label">Investigations Done</td><td colspan="3">' + safeLines(rec.InvestigationsDone) + '</td></tr>';
+    html += '<tr><td class="label">Referral Letter</td><td colspan="3">' + safeLines(rec.ReferralLetter) + '</td></tr>';
+    html += '<tr><td class="label">Carries Epipen / Adrenaline</td><td colspan="3">' + safe(rec.CarriesEpipen) + '</td></tr>';
+    html += '</table></div>';
+
+    html += '<div class="section"><h2>3. Allergy & Medical History</h2><table>';
+    html += '<tr><td class="label">General Allergic History</td><td colspan="3">' + safe(rec.GeneralAllergicHistory) + '</td></tr>';
+    html += '<tr><td class="label">Drug Allergies</td><td>' + safe(rec.DrugAllergies) + '</td><td class="label">Food Allergies</td><td>' + safe(rec.FoodAllergies) + '</td></tr>';
+    html += '<tr><td class="label">Tick Bites</td><td colspan="3">' + safe(rec.TickBites) + '</td></tr>';
+    html += '<tr><td class="label">Past Medical History</td><td colspan="3">' + safeLines(rec.PastMedicalHistory) + '</td></tr>';
+    html += '<tr><td class="label">Drug History</td><td colspan="3">' + safeLines(rec.DrugHistory) + '</td></tr>';
+    html += '<tr><td class="label">Past Surgical History</td><td colspan="3">' + safeLines(rec.PastSurgicalHistory) + '</td></tr>';
+    html += '<tr><td class="label">Family History</td><td colspan="3">' + safeLines(rec.FamilyHistory) + '</td></tr>';
+    html += '</table></div></div>';
+
+    html += '<div class="print-page page-two">';
+    html += '<div class="section"><h2>4. Assessment &amp; Management</h2><table>';
+    html += '<tr><td class="label">Problem List</td><td colspan="3">' + safeLines(rec.ProblemList) + '</td></tr>';
+    html += '<tr><td class="label">Probable Diagnosis</td><td>' + safeLines(rec.ProbableDiagnosis) + '</td><td class="label">Review Plan</td><td>' + safe(rec.ReviewPlan) + '</td></tr>';
+    html += '<tr><td class="label">Investigations Ordered</td><td colspan="3">' + safeLines(rec.InvestigationsOrdered) + '</td></tr>';
+    html += '<tr><td class="label">Management Plan</td><td colspan="3">' + safeLines(rec.ManagementPlan) + '</td></tr>';
+    html += '<tr><td class="label">Prescription</td><td colspan="3">' + safeLines(rec.Prescription) + '</td></tr>';
+    html += '</table></div>';
+
+    html += '<div class="section-five"><h2>5. Skin Prick Test Results</h2>';
+    html += '<div class="control-row">';
+    html += '<div class="control-item"><strong>Positive Control (0.1% Histamine):</strong><span class="control-value">' + (rec.Histamine ? safe(rec.Histamine) : '&nbsp;') + '</span></div>';
+    html += '<div class="control-item"><strong>Negative Control (N. Saline):</strong><span class="control-value">' + (rec.Saline ? safe(rec.Saline) : '&nbsp;') + '</span></div>';
+    html += '</div>';
+
     html += '<table class="allergen-table">';
     html += '<tr><td class="header">Allergen</td><td class="header">Result</td><td class="header">Allergen</td><td class="header">Result</td><td class="header">Allergen</td><td class="header">Result</td></tr>';
-    html += '<tr><td>Beef (Extract)</td><td>' + (rec.BeefExtract || '-') + '</td><td>House Dust Mite</td><td>' + (rec.HouseDustMite || '-') + '</td><td>IV Penicillin</td><td>' + (rec.IVPenicillin || '-') + '</td></tr>';
-    html += '<tr><td>Pork (Extract)</td><td>' + (rec.PorkExtract || '-') + '</td><td>Storage Mite</td><td>' + (rec.StorageMite || '-') + '</td><td>Oral Penicillin</td><td>' + (rec.OralPenicillin || '-') + '</td></tr>';
-    html += '<tr><td>Beef (Raw)</td><td>' + (rec.BeefRaw || '-') + '</td><td>Cockroach</td><td>' + (rec.Cockroach || '-') + '</td><td>Amoxicillin</td><td>' + (rec.Amoxicillin || '-') + '</td></tr>';
-    html += '<tr><td>Pork (Raw)</td><td>' + (rec.PorkRaw || '-') + '</td><td>Cat epithelium</td><td>' + (rec.CatEpithelium || '-') + '</td><td>Co-amoxiclav</td><td>' + (rec.CoAmoxiclav || '-') + '</td></tr>';
-    html += '<tr><td>Milk</td><td>' + (rec.Milk || '-') + '</td><td>Dog epithelium</td><td>' + (rec.DogEpithelium || '-') + '</td><td>Cefalexin</td><td>' + (rec.Cefalexin || '-') + '</td></tr>';
-    html += '<tr><td>Gelatin</td><td>' + (rec.Gelatin || '-') + '</td><td>Mould Mix</td><td>' + (rec.MouldMix || '-') + '</td><td>Cefuroxime</td><td>' + (rec.Cefuroxime || '-') + '</td></tr>';
-    html += '<tr><td>Prawns</td><td>' + (rec.Prawns || '-') + '</td><td>Grass Pollens</td><td>' + (rec.GrassPollens || '-') + '</td><td>Cefotaxime/Ceftriaxone</td><td>' + (rec.CefotaximeCeftriaxone || '-') + '</td></tr>';
-    html += '<tr><td>Tuna</td><td>' + (rec.Tuna || '-') + '</td><td>Weed Pollens</td><td>' + (rec.WeedPollens || '-') + '</td><td>Meropenem</td><td>' + (rec.Meropenem || '-') + '</td></tr>';
-    html += '<tr><td>Salmon</td><td>' + (rec.Salmon || '-') + '</td><td>Aspergillus</td><td>' + (rec.Aspergillus || '-') + '</td><td>Omeprazole</td><td>' + (rec.Omeprazole || '-') + '</td></tr>';
-    html += '<tr><td>Eggs</td><td>' + (rec.Eggs || '-') + '</td><td>Wheat</td><td>' + (rec.Wheat || '-') + '</td><td>Infliximab/Adalimumab</td><td>' + (rec.InfliximabAdalimumab || '-') + '</td></tr>';
-    html += '<tr><td>Chicken</td><td>' + (rec.Chicken || '-') + '</td><td></td><td></td><td></td><td></td></tr>';
-    html += '</table>';
-    
+    html += '<tr><td>Beef (Extract)</td><td>' + safe(rec.BeefExtract) + '</td><td>House Dust Mite</td><td>' + safe(rec.HouseDustMite) + '</td><td>IV Penicillin</td><td>' + safe(rec.IVPenicillin) + '</td></tr>';
+    html += '<tr><td>Pork (Extract)</td><td>' + safe(rec.PorkExtract) + '</td><td>Storage Mite</td><td>' + safe(rec.StorageMite) + '</td><td>Oral Penicillin</td><td>' + safe(rec.OralPenicillin) + '</td></tr>';
+    html += '<tr><td>Beef (Raw)</td><td>' + safe(rec.BeefRaw) + '</td><td>Cockroach</td><td>' + safe(rec.Cockroach) + '</td><td>Amoxicillin</td><td>' + safe(rec.Amoxicillin) + '</td></tr>';
+    html += '<tr><td>Pork (Raw)</td><td>' + safe(rec.PorkRaw) + '</td><td>Cat epithelium</td><td>' + safe(rec.CatEpithelium) + '</td><td>Co-amoxiclav</td><td>' + safe(rec.CoAmoxiclav) + '</td></tr>';
+    html += '<tr><td>Milk</td><td>' + safe(rec.Milk) + '</td><td>Dog epithelium</td><td>' + safe(rec.DogEpithelium) + '</td><td>Cefalexin</td><td>' + safe(rec.Cefalexin) + '</td></tr>';
+    html += '<tr><td>Gelatin</td><td>' + safe(rec.Gelatin) + '</td><td>Mould Mix</td><td>' + safe(rec.MouldMix) + '</td><td>Cefuroxime</td><td>' + safe(rec.Cefuroxime) + '</td></tr>';
+    html += '<tr><td>Prawns</td><td>' + safe(rec.Prawns) + '</td><td>Grass Pollens</td><td>' + safe(rec.GrassPollens) + '</td><td>Cefotaxime/Ceftriaxone</td><td>' + safe(rec.CefotaximeCeftriaxone) + '</td></tr>';
+    html += '<tr><td>Tuna</td><td>' + safe(rec.Tuna) + '</td><td>Weed Pollens</td><td>' + safe(rec.WeedPollens) + '</td><td>Meropenem</td><td>' + safe(rec.Meropenem) + '</td></tr>';
+    html += '<tr><td>Salmon</td><td>' + safe(rec.Salmon) + '</td><td>Aspergillus</td><td>' + safe(rec.Aspergillus) + '</td><td>Omeprazole</td><td>' + safe(rec.Omeprazole) + '</td></tr>';
+    html += '<tr><td>Eggs</td><td>' + safe(rec.Eggs) + '</td><td>Wheat</td><td>' + safe(rec.Wheat) + '</td><td>Infliximab/Adalimumab</td><td>' + safe(rec.InfliximabAdalimumab) + '</td></tr>';
+    html += '<tr><td>Chicken</td><td>' + safe(rec.Chicken) + '</td><td></td><td></td><td></td><td></td></tr>';
+    html += '</table></div></div>';
+
     html += '</body></html>';
-    
+    printWindow.document.open();
     printWindow.document.write(html);
     printWindow.document.close();
+    printWindow.focus();
 }
     // ── VIEW RECORD ──────────────────────────
     function viewRecord(rowId) {
