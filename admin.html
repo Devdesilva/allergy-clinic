@@ -409,6 +409,16 @@
             }
         }
 
+        /* Edit-mode suggestion dropdown (Problem List / Probable Diagnosis / Investigations) */
+        .ac-wrap { position: relative; }
+        .ac-list {
+            display: none; position: absolute; left: 0; right: 0; z-index: 2000;
+            margin: 2px 0 0; padding: 4px 0; list-style: none;
+            background: #fff; border: 1px solid #ced4da; border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-height: 220px; overflow-y: auto;
+        }
+        .ac-list li { padding: 6px 10px; cursor: pointer; font-size: 14px; }
+        .ac-list li:hover, .ac-list li.ac-active { background: #e7f1ff; }
     </style>
 </head>
 <body>
@@ -924,6 +934,124 @@
         document.getElementById('recordModal').style.display = "none";
     }
 
+    // ── EDIT-MODE SUGGESTIONS ────────────────
+    var EDIT_SUGGESTIONS = {
+        ProblemList: [
+            "Alpha-gal syndrome",
+            "Chronic spontaneous urticaria",
+            "Acute urticaria",
+            "Hx of penicillin/amoxicillin allergy",
+            "Hx of paracetamol allergy",
+            "Hx of NSAIDs allergy",
+            "Hx of food allergy",
+            "NSAIDs exacerbated allergic disease",
+            "Bronchial asthma/ allergic rhinitis",
+            "Viral induced urticaria",
+            "Anaphylaxis ? trigger",
+            "Multiple antibiotic allergy",
+            "Hx of allergy to omeprazole/ esomeprazole/ pantoprazole",
+            "Drug allergy- ? drug",
+            "Peri-operative anaphylaxis"
+        ],
+        ProbableDiagnosis: [
+            "Alpha-gal syndrome",
+            "Chronic spontaneous urticaria",
+            "Acute urticaria",
+            "Anaphylaxis – Penicillins",
+            "Anaphylaxis- cephalosporins",
+            "NSAIDs exacerbated allergic disease",
+            "Idiopathic anaphylaxis",
+            "Viral induced urticaria",
+            "Multiple antibiotic allergy",
+            "Allergy to PPI",
+            "Wheat/food  dependent exercise induced anaphylaxis",
+            "Peri-operative anaphylaxis"
+        ],
+        InvestigationsOrdered: [
+            "SPT- alpha-gal",
+            "SPT- beta-lactams",
+            "SPT- food",
+            "SPT – PPI",
+            "SPT- anaesthetic agents",
+            "Specific IgE alpha-gal",
+            "Oral graded challenge celecoxib",
+            "Oral graded challenge amoxicillin"
+        ]
+    };
+
+    // Suggests items for the line the cursor is on. Picking one fills that line
+    // (keeping any "1. " style numbering); the textarea stays fully editable.
+    function attachEditSuggestions(form) {
+        Object.keys(EDIT_SUGGESTIONS).forEach(function(fieldName) {
+            var ta = form.querySelector('textarea[name="' + fieldName + '"]');
+            if (!ta) return;
+            var options = EDIT_SUGGESTIONS[fieldName];
+            var group = ta.parentNode;
+            group.classList.add('ac-wrap');
+            var list = document.createElement('ul');
+            list.className = 'ac-list';
+            group.appendChild(list);
+            var shown = [];
+            var active = -1;
+
+            function currentLine() {
+                var v = ta.value, pos = ta.selectionStart;
+                var start = v.lastIndexOf('\n', pos - 1) + 1;
+                var end = v.indexOf('\n', pos);
+                if (end === -1) end = v.length;
+                var text = v.slice(start, end);
+                var prefix = (text.match(/^\s*(\d+[.)]\s*|[-•*]\s*)?/) || [''])[0];
+                return { start: start, end: end, prefix: prefix, query: text.slice(prefix.length).trim() };
+            }
+
+            function hide() { list.style.display = 'none'; active = -1; }
+
+            function render() {
+                var q = currentLine().query.toLowerCase();
+                shown = options.filter(function(o) { return o.toLowerCase().indexOf(q) !== -1; });
+                if (!shown.length || (shown.length === 1 && shown[0].toLowerCase() === q)) { hide(); return; }
+                active = -1;
+                list.innerHTML = '';
+                shown.forEach(function(o, i) {
+                    var li = document.createElement('li');
+                    li.textContent = o;
+                    li.addEventListener('mousedown', function(e) { e.preventDefault(); pick(i); });
+                    list.appendChild(li);
+                });
+                list.style.display = 'block';
+            }
+
+            function highlight(i) {
+                var items = list.children;
+                for (var k = 0; k < items.length; k++) items[k].classList.toggle('ac-active', k === i);
+                active = i;
+                if (items[i]) items[i].scrollIntoView({ block: 'nearest' });
+            }
+
+            function pick(i) {
+                var line = currentLine();
+                var insert = line.prefix + shown[i];
+                ta.value = ta.value.slice(0, line.start) + insert + ta.value.slice(line.end);
+                var caret = line.start + insert.length;
+                ta.focus();
+                ta.setSelectionRange(caret, caret);
+                hide();
+            }
+
+            ta.addEventListener('input', render);
+            ta.addEventListener('focus', render);
+            ta.addEventListener('click', render);
+            ta.addEventListener('blur', hide);
+            ta.addEventListener('keydown', function(e) {
+                if (list.style.display !== 'block') return;
+                if (e.key === 'ArrowDown') { e.preventDefault(); highlight(Math.min(active + 1, shown.length - 1)); }
+                else if (e.key === 'ArrowUp') { e.preventDefault(); highlight(Math.max(active - 1, 0)); }
+                else if (e.key === 'Enter' && active >= 0) { e.preventDefault(); pick(active); }
+                else if (e.key === 'Escape') { e.stopPropagation(); hide(); }
+            });
+        });
+    }
+
     // ── EDIT RECORD ──────────────────────────
     function editRecord(rowId) {
         activeSelectedRecord = parsedRecords.find(function(r) { return r._rowId === rowId; });
@@ -1003,6 +1131,7 @@
         html += '</form>';
 
         document.getElementById('editModalBody').innerHTML = html;
+        attachEditSuggestions(document.getElementById('editForm'));
         document.getElementById('editModal').style.display = "block";
     }
 
